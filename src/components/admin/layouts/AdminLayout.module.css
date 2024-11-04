@@ -1,0 +1,96 @@
+/* /src/components/admin/layouts/AdminLayout.module.css */
+
+/* 1depth 메뉴의 스타일 */
+.depth1 {
+    font-weight: bold;
+    background-color: transparent; /* 기본 배경색 */
+    padding: 10px 20px; /* padding 조정 */
+    width: 100%; /* 100% 너비로 설정 */
+    box-sizing: border-box; /* padding 포함한 전체 너비를 기준으로 설정 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: none; /* 기본 테두리 제거 */
+    cursor: pointer;
+    color: white;
+    font-size: 16px;
+}
+
+/* 1depth 메뉴가 활성화되었을 때 (선택되었을 때) */
+.sidebarItem.active .depth1 {
+    /* background-color: #444; 선택된 메뉴의 배경색 */
+    color: #8ed6f0; /* 선택된 메뉴의 글자색 */
+}
+
+/* 호버 시 스타일 */
+.depth1:hover {
+    /* background-color: #555; 호버 시 배경색 */
+    color: #8ed6f0; /* 호버 시 글자색 */
+}
+
+/* 드롭다운 아이콘 크기 */
+.arrowIcon {
+    font-size: 24px;
+}
+
+/* 2depth 메뉴 스타일 */
+.subMenu {
+    padding-left: 0; /* 서브메뉴 왼쪽 여백 */
+    background-color: #333; /* 서브메뉴 배경색 */
+}
+
+.depth2 {
+    padding: 8px 40px;
+    color: white;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #656d78;
+    font-size: 14px;
+}
+
+.depth2:hover {
+    /* background-color: #444; 2depth 메뉴 호버 시 배경색 */
+    color: #8ed6f0;
+}
+
+/* 선택된 2depth 메뉴 */
+.depth2.selected {
+    /* background-color: #555; */
+    color: #8ed6f0;
+}
+
+/* 레이아웃 설정 */
+.layout {
+    display: flex;
+}
+
+.sidebar {
+    width: 250px; /* 사이드바 너비 */
+    min-width: 250px;
+    background-color: #333;
+    color: white;
+    padding: 15px 0; /* 사이드바의 위아래 padding */
+    height: 100vh;
+}
+
+.sidebar h1 {
+    color: white;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebarItem {
+    margin-bottom: 10px;
+}
+
+.mainContent {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f4f4f4;
+}

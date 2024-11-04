@@ -1,0 +1,91 @@
+/* 전체 컨테이너 스타일 */
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    /* border: 1px solid #ddd; */
+    /* background-color: #f9f9f9; */
+}
+
+/* 제목 스타일 */
+.title {
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* 섹션 제목 스타일 */
+.sectionTitle {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+/* 업로드 섹션 스타일 */
+.uploadSection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    background-color: #ffffff;
+    border-radius: 8px;
+}
+
+/* 미리보기 이미지 스타일 */
+.preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.preview img {
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    max-width: 100px;
+    max-height: 100px;
+}
+
+/* 파일 선택 버튼 스타일 */
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+    margin-right: 5px;
+}
+
+.button:hover {
+    background-color: #45a049;
+}
+
+/* 삭제 버튼 스타일 */
+.deleteButton {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #f44336;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.deleteButton:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
+}
+
+.deleteButton:hover:not(:disabled) {
+    background-color: #d32f2f;
+}
+
+.buttonGroup {
+    display: flex;
+    gap: 10px; /* 버튼 사이 간격 */
+    margin-top: 10px;
+}

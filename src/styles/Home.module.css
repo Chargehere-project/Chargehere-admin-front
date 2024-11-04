@@ -1,0 +1,131 @@
+.mainBanner {
+  background-image: url('/intro.jpg');
+  background-size: cover;
+  background-position: center;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.bannerContent {
+  text-align: center;
+  color: white;
+}
+.fadeIn {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeIn 2s forwards;
+}
+.fadeInButton {
+  padding: 15px 30px;
+  font-size: 1.2rem;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  opacity: 0;
+  animation: fadeInButton 2.5s forwards;
+  margin-top: 10px;
+  margin-right: 20px;
+}
+.fadeInButton:hover {
+  background-color: #0056B3;
+}
+/* 애니메이션이 적용될 때의 클래스 */
+.fadeInSection {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+}
+.secondSection, .thirdSection, .fourthSection, .fifthSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 50px;
+}
+.textContainer {
+  width: 50%;
+  text-align: center;
+}
+.textContainer h2 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  color: #333;
+}
+.textContainer p {
+  font-size: 1.2rem;
+  color: #666;
+  line-height: 1.6;
+}
+.imageContainer {
+  width: 50%;
+  display: flex;
+  justify-content: center;
+}
+.image {
+  max-width: 80%;
+  height: auto;
+  border-radius: 10px;
+}
+.thirdSection, .fifthSection {
+  flex-direction: row-reverse;
+}
+.sixthSection {
+  background-color: #F4F4F4;
+  padding: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.sixthText h1 {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #00AAFF;
+}
+.sixthText p {
+  font-size: 1.5rem;
+  color: #666;
+}
+.sixthText a {
+  color: #00AAFF;
+  text-decoration: none;
+}
+.sixthText a:hover {
+  text-decoration: underline;
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fadeInButton {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+

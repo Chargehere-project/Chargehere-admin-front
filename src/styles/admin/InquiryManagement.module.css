@@ -1,0 +1,297 @@
+
+.searchContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* 각 검색 섹션 사이에 공간 추가 */
+}
+
+.searchBox {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* 각 인풋 필드 사이에 간격 추가 */
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: flex-end; /* 버튼을 우측 끝으로 정렬 */
+    gap: 10px; /* 버튼 사이에 간격 추가 */
+    margin-top: 20px; /* 상단 여백 추가 */
+}
+
+
+.dateSearchBox {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchContainer {
+    height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #ddd;
+    padding: 20px;
+    /* background-color: #f9f9f9; */
+}
+
+.searchTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.searchTable td {
+    padding: 10px;
+}
+
+.labelCell {
+    /* text-align: right; */
+    width: 150px;
+    font-weight: bold;
+}
+
+.inputCell {
+    text-align: left;
+}
+
+.dateSeparator {
+    margin: 0 10px;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #45a049;
+}
+
+.cancelButton {
+    background-color: #f44336;
+}
+
+.cancelButton:hover {
+    background-color: #d32f2f;
+}
+
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 5px;
+  text-align: center;
+}
+
+.table th {
+  background-color: #333;
+  color: white;
+}
+
+.table tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.table tr:hover {
+  background-color: #ddd;
+}
+
+.statusActive {
+    color: green;
+}
+
+.statusInactive {
+    color: #ffc926;
+}
+
+.statusWithdrawn {
+    color: #d92a2a;
+}
+
+.pagination {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.pagination button {
+    padding: 8px 12px;
+    margin: 0 5px;
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    cursor: pointer;
+}
+
+.pagination button.activePage {
+    background-color: #8ed6f0;
+    color: white;
+}
+
+.modalHeader {
+    font-size: 20px;
+    font-weight: bold;
+    margin:50px 0;
+    text-align: center;
+}
+
+.modalForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modalForm .formGroup {
+    display: flex;
+    align-items: center; /* 라벨과 인풋을 수직으로 정렬 */
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.modalForm label {
+    font-weight: bold;
+    width: 100px; /* 라벨의 고정 너비 설정 */
+    text-align: right; /* 라벨을 오른쪽 정렬 */
+    /* margin-left:-10px; */
+}
+
+.modalForm input {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 100px); /* 인풋 창 너비는 라벨을 제외한 공간에 맞춤 */
+    margin-right: 30px;
+}
+
+.readOnly {
+    background-color: #f0f0f0;
+}
+
+.saveButton {
+    padding: 10px 20px;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+.cancelButton {
+    padding: 10px 20px;
+    background-color: #ccc;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.saveButton:hover,
+.cancelButton:hover {
+    background-color: #005bb5;
+}
+.searchContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #ddd;
+    padding: 20px;
+    background-color: #f9f9f9;
+    height: 150px;
+}
+
+.searchTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.searchTable td {
+    padding: 10px;
+}
+
+.labelCell {
+    text-align: right;
+    width: 150px;
+    font-weight: bold;
+}
+
+.inputCell {
+    text-align: left;
+}
+
+.dateSeparator {
+    margin: 0 10px;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4caf50;
+    color: white;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #45a049;
+}
+
+.cancelButton {
+    background-color: #f44336;
+    color: white;
+}
+
+.cancelButton:hover {
+    background-color: #d32f2f;
+}
+
+.buttonGroup {
+    display: flex;
+    justify-content: flex-end; /* 버튼을 우측 끝으로 정렬 */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4caf50; /* 검색 버튼 색상 */
+    color: white;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #45a049;
+}
+
+.cancelButton {
+    background-color: #f44336; /* 초기화 버튼 색상 */
+    color: white;
+}
+
+.cancelButton:hover {
+    background-color: #d32f2f;
+}
