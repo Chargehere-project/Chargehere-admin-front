@@ -9,6 +9,7 @@ import moment from 'moment-timezone';
 import 'react-quill/dist/quill.snow.css';
 import styles from '@/styles/admin/ProductManagement.module.css';
 import ProductSearch from './ProductSearch';
+import apiClient from '@/utils/apiClient';
 
 
 
@@ -46,7 +47,7 @@ const ProductTable: React.FC = () => {
        console.log('Fetching products with params:', params); // 디버깅용 로그
 
        try {
-           const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, { params });
+           const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, { params });
            console.log('백엔드에서 받아온 데이터:', response.data.products); // 백엔드 응답 확인
 
            setProducts(response.data.products);
@@ -159,13 +160,13 @@ const ProductTable: React.FC = () => {
             }
 
             if (isEditing && selectedProduct) {
-                await axios.put(
+                await apiClient.put(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${selectedProduct.ProductID}`,
                     formData
                 );
                 alert('상품이 수정되었습니다.');
             } else {
-                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, formData);
+                await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, formData);
                 alert('상품이 등록되었습니다.');
             }
             fetchProducts();
@@ -221,7 +222,7 @@ const ProductTable: React.FC = () => {
     const removeThumbnailPreview = async () => {
         if (isEditing && selectedProduct && selectedProduct.Image) {
             try {
-                await axios.delete(
+                await apiClient.delete(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${selectedProduct.ProductID}/thumbnail`
                 );
                 console.log('서버에서 이미지가 삭제되었습니다.');
@@ -236,7 +237,7 @@ const ProductTable: React.FC = () => {
 
     const handleDeleteProduct = async (productId) => {
         try {
-            await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`, {
+            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`, {
                 status: 'deleted',
             });
             fetchProducts();
@@ -249,7 +250,7 @@ const ProductTable: React.FC = () => {
     const toggleProductStatus = async (productId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
-            await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`, {
+            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`, {
                 status: newStatus,
             });
             fetchProducts();

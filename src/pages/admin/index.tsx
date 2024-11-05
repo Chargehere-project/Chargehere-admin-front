@@ -1,13 +1,24 @@
-import React from 'react';
-import AdminLayout from '@/components/admin/layouts/AdminLayout'; // AdminLayout import
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { useAppContext } from '../../../contexts/AppContext';
+import AdminLayout from '@/components/admin/layouts/AdminLayout';
 
 const AdminPage: React.FC = () => {
+    const { isAuthenticated } = useAppContext();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            router.push('/admin/login'); // 인증되지 않은 경우 로그인 페이지로 리디렉션
+        }
+    }, [isAuthenticated, router]);
+
     return (
         <AdminLayout>
-            <h1 style={{ marginBottom: '30px' }}>관리자 페이지</h1>
-        
+            <h1>관리자 페이지</h1>
+            {isAuthenticated && <p>인증된 사용자입니다.</p>}
         </AdminLayout>
     );
 };
 
-export default AdminPage; // React 컴포넌트를 기본 내보내기 (default export)
+export default AdminPage;

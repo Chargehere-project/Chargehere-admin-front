@@ -3,6 +3,7 @@ import axios from 'axios';
 import Image from 'next/image';
 import styles from '@/styles/admin/BannerSettings.module.css';
 
+
 const BannerSettings: React.FC = () => {
     const defaultBanners = ['/colla.png', '/game.png', '/style.png']; // 기본 배너 이미지 경로 설정
     const [bannerPreviews, setBannerPreviews] = useState<string[]>(defaultBanners);

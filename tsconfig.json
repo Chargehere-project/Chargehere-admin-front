@@ -16,7 +16,8 @@
         "paths": {
             "@/models/*": ["models/*"],
             "@/styles/*": ["styles/*"], // styles 폴더에 대한 절대 경로 설정
-            "@/components/*": ["components/*"] // components 폴더에 대한 절대 경로 설정 (필요시)
+            "@/components/*": ["components/*"], // components 폴더에 대한 절대 경로 설정 (필요시)
+            "@/*": ["./*"] // 루트 기준으로 설정
         }
     },
     "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],

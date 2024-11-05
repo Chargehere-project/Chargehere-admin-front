@@ -5,6 +5,8 @@ import Modal from 'react-modal';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import styles from '@/styles/admin/ProductManagement.module.css';
 import QnASearch from './QnASearch';
+import apiClient from '@/utils/apiClient';
+
 
 const ITEMS_PER_PAGE = 10;
 const VISIBLE_PAGE_RANGE = 2;
@@ -27,7 +29,7 @@ const QnATable: React.FC = () => {
     const fetchQnAs = async (page = 1) => {
         setIsLoading(true);
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas`, {
                 params: {
                     page,
                     limit: ITEMS_PER_PAGE,
@@ -105,7 +107,9 @@ const QnATable: React.FC = () => {
     const handleOpenModal = async (qna: any) => {
         setSelectedQnA(qna);
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas/${qna.QnAID}/replies`);
+            const response = await apiClient.get(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas/${qna.QnAID}/replies`
+            );
             if (response.data.reply) {
                 setReplyContent(response.data.reply.ReplyContent);
             }
@@ -128,9 +132,11 @@ const QnATable: React.FC = () => {
         }
 
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas/${selectedQnA.QnAID}/replies`, {
+            await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas/${selectedQnA.QnAID}/replies`, {
                 ReplyContent: replyContent,
+                ProductID: selectedQnA.ProductID, // ProductID 추가
             });
+
 
             const updatedQnAs = qnas.map((qna) => {
                 if (qna.QnAID === selectedQnA.QnAID) {
@@ -146,6 +152,7 @@ const QnATable: React.FC = () => {
             console.error('답변 저장 실패:', error);
         }
     };
+
 
     const renderPaginationButtons = () => {
         const pages = [];

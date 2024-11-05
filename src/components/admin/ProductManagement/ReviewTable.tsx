@@ -7,6 +7,7 @@ import { AiOutlineClose } from 'react-icons/ai';
 import moment from 'moment-timezone';
 import styles from '@/styles/admin/ReviewManagement.module.css';
 import ReviewSearch from './ReviewSearch';
+import apiClient from '@/utils/apiClient';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -63,7 +64,7 @@ const ReviewTable: React.FC = () => {
 
             console.log('Fetching reviews with params:', params); // 디버깅용
 
-            const response = await axios.get(url, { params });
+            const response = await apiClient.get(url, { params });
 
             console.log('Fetched reviews response:', response.data); // 디버깅용
             setReviews(response.data.reviews);
@@ -93,7 +94,7 @@ const ReviewTable: React.FC = () => {
 
         try {
             console.log(`DELETE request URL: http://localhost:8000/api/admin/reviews/${reviewId}`);
-            const response = await axios.delete(`http://localhost:8000/api/admin/reviews/${reviewId}`);
+            const response = await apiClient.delete(`http://localhost:8000/api/admin/reviews/${reviewId}`);
             console.log('Delete response:', response);
             alert('리뷰가 삭제되었습니다.');
             fetchReviews(currentPage);
@@ -168,7 +169,7 @@ const ReviewTable: React.FC = () => {
         const newStatus = currentStatus === 'visible' ? 'hidden' : 'visible';
         console.log(`Attempting to update status for review ID: ${reviewId} to ${newStatus}`);
         try {
-            const response = await axios.put(
+            const response = await apiClient.put(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/admin/reviews/${reviewId}/status`,
                 {
                     status: newStatus,
@@ -213,7 +214,7 @@ const ReviewTable: React.FC = () => {
     const removeImagePreview = async () => {
         if (selectedReview?.ReviewID) {
             try {
-                await axios.delete(
+                await apiClient.delete(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/reviews/${selectedReview.ReviewID}/image`
                 );
                 alert('이미지가 성공적으로 삭제되었습니다.');
@@ -235,7 +236,7 @@ const ReviewTable: React.FC = () => {
                 formData.append('image', imageFile);
             }
 
-            await axios.put(
+            await apiClient.put(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/admin/reviews/${selectedReview.ReviewID}`,
                 formData
             );

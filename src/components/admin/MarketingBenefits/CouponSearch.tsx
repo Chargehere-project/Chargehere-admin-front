@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styles from '@/styles/admin/Table.module.css';
+import apiClient from '@/utils/apiClient';
 
 const CouponSearch: React.FC<{
     onSearch: (data: any) => void;
@@ -18,7 +19,7 @@ const CouponSearch: React.FC<{
     useEffect(() => {
         const fetchCoupons = async () => {
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`);
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`);
                 console.log('Fetched Coupons on mount:', response.data); // 추가된 로그
                 setCouponOptions(response.data.coupons || []);
             } catch (error) {

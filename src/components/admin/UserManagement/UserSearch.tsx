@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import styles from '@/styles/admin/Table.module.css';
+import apiClient from '@/utils/apiClient';
 
 const UserSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void }> = ({ onSearch, onReset }) => {
     // 검색 관련 상태 변수 정의
@@ -29,7 +30,9 @@ const UserSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void 
             };
 
             // 서버에 검색 요청
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, { params });
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
+                params,
+            });
             onSearch(response.data); // 검색 결과를 부모 컴포넌트로 전달
         } catch (error) {
             console.error('검색 실패:', error); // 검색 실패 시 에러 메시지 출력

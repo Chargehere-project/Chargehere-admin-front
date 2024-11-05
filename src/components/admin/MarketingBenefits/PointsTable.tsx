@@ -5,6 +5,7 @@ import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import styles from '@/styles/admin/Table.module.css';
 import PointsSearch from './PointsSearch';
  import { MdEdit, MdDelete, MdClose } from 'react-icons/md';
+ import apiClient from '@/utils/apiClient';
 
 const ITEMS_PER_PAGE = 10; // 한 페이지에 보여줄 항목 수
     const VISIBLE_PAGE_RANGE = 2; // 보이는 페이지 범위
@@ -30,7 +31,7 @@ const PointsTable: React.FC = () => {
     const fetchPointsHistory = async (page: number = 1) => {
         setIsLoading(true);
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
                 params: {
                     page, // 현재 페이지
                     limit: ITEMS_PER_PAGE, // 페이지당 항목 수
@@ -58,7 +59,7 @@ const PointsTable: React.FC = () => {
     // 총 포인트 개수를 가져오는 함수
     const fetchTotalPointsCount = async () => {
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/count`);
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/count`);
             setTotalPointsCount(response.data.count); // 총 개수 업데이트
         } catch (error) {
             console.error('총 포인트 개수를 가져오는 데 실패했습니다:', error);
@@ -154,7 +155,7 @@ const PointsTable: React.FC = () => {
     const fetchUsers = async (query = '') => {
         console.log('Fetching users with query:', query);
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
                 params: {
                     searchType: searchBy,
                     searchValue: userSearchQuery,
@@ -228,7 +229,7 @@ const PointsTable: React.FC = () => {
         } else {
             try {
                 // 전체 유저 정보를 서버에서 가져옴
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
                 const allUsers = response.data.users;
 
                 // 모든 유저 데이터를 users에 저장하고 selectedUsers에 모든 user 정보를 추가
@@ -249,7 +250,7 @@ const PointsTable: React.FC = () => {
 
         try {
             for (const user of selectedUsers) {
-                await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
+                await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
                     loginID: user.LoginID,
                     Amount: pointsAmount,
                     Description: pointsReason,
@@ -269,7 +270,7 @@ const PointsTable: React.FC = () => {
             console.log('취소 요청 - pointId:', pointId, 'loginId:', loginId, 'amount:', amount);
 
             // 한번 취소된 포인트는 다시 취소할 수 없게 처리
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/cancel`, {
+            const response = await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/cancel`, {
                 pointID: pointId,
                 loginID: loginId,
                 Amount: -Math.abs(amount), // 취소로 인한 금액은 차감 처리

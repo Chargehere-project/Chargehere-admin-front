@@ -1,32 +1,43 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/router';
+import { useAppContext } from '../../../../contexts/AppContext';
 
-const AdminLogin: React.FC = () => {
+const AdminLogin = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
+    const [error, setError] = useState('');
     const router = useRouter();
+    const { checkAuth } = useAppContext(); // checkAuth 가져오기
 
-   const handleLogin = async (e: React.FormEvent) => {
-       e.preventDefault();
-       try {
-           // 백엔드 서버 URL 환경 변수 사용
-           const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/auth/login`, {
-               username,
-               password,
-           });
-           const { token } = response.data;
+    const handleLogin = async (e) => {
+        e.preventDefault();
 
-           // JWT 토큰을 로컬 스토리지에 저장
-           localStorage.setItem('adminToken', token);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            });
 
-           // 로그인 성공 시 관리자 페이지로 이동
-           router.push('/admin');
-       } catch (error) {
-           setErrorMessage('로그인 실패: 아이디 또는 비밀번호가 올바르지 않습니다.');
-       }
-   };
+            if (response.ok) {
+                const { token } = await response.json();
+                localStorage.setItem('adminToken', token);
+
+                // 인증 상태를 업데이트하기 위해 checkAuth 호출
+                await checkAuth();
+
+                // 로그인 성공 후 관리자 페이지로 리디렉션
+                router.push('/admin');
+            } else {
+                setError('로그인 실패: 아이디 또는 비밀번호가 올바르지 않습니다.');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            setError('로그인 중 오류가 발생했습니다.');
+        }
+    };
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -34,8 +45,7 @@ const AdminLogin: React.FC = () => {
                 onSubmit={handleLogin}
                 style={{ width: '300px', padding: '20px', border: '1px solid #ddd', borderRadius: '5px' }}>
                 <h2 style={{ textAlign: 'center' }}>관리자 로그인</h2>
-                {errorMessage && <p style={{ color: 'red' }}>{errorMessage}</p>}
-
+                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <div style={{ marginBottom: '15px' }}>
                     <label>아이디:</label>
                     <input
@@ -46,7 +56,6 @@ const AdminLogin: React.FC = () => {
                         required
                     />
                 </div>
-
                 <div style={{ marginBottom: '15px' }}>
                     <label>비밀번호:</label>
                     <input
@@ -57,7 +66,6 @@ const AdminLogin: React.FC = () => {
                         required
                     />
                 </div>
-
                 <button
                     type="submit"
                     style={{
