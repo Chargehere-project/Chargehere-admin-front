@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import styles from '@/styles/admin/PointsManagement.module.css';
+import apiClient from '@/utils/apiClient';
 
 const PointsSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void }> = ({ onSearch, onReset }) => {
     const [loginID, setLoginID] = useState(''); // LoginID 검색
@@ -25,7 +26,7 @@ const PointsSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
             };
 
             // 서버에 검색 요청
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/search`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/search`, {
                 params,
             });
 

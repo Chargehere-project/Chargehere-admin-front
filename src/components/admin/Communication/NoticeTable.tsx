@@ -8,6 +8,7 @@ import moment from 'moment-timezone';
 import 'react-quill/dist/quill.snow.css';
 import styles from '@/styles/admin/Table.module.css';
 import NoticeSearch from './NoticeSearch';
+import apiClient from '@/utils/apiClient';
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 const ITEMS_PER_PAGE = 10;
@@ -25,7 +26,7 @@ const NoticeTable: React.FC = () => {
     useEffect(() => {
         const fetchTotalNotices = async () => {
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/count`);
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/count`);
                 setTotalNotices(response.data.count);
             } catch (error) {
                 console.error('공지사항 총 개수 가져오기 실패:', error);
@@ -36,7 +37,7 @@ const NoticeTable: React.FC = () => {
 
     const fetchNotices = async (page = 1) => {
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`, {
                 params: { page, limit: ITEMS_PER_PAGE },
             });
             setNotices(response.data.notices);
@@ -58,7 +59,7 @@ const NoticeTable: React.FC = () => {
 
     const handleSearchResults = async (searchParams: any) => {
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/search`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/search`, {
                 params: {
                     ...searchParams,
                     page: 1, // 검색 시 첫 페이지로 이동
@@ -140,7 +141,7 @@ const NoticeTable: React.FC = () => {
 
     const handleSaveNotice = async () => {
         try {
-            await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`, {
+            await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`, {
                 title: newNotice.title,
                 content: newNotice.content,
                 postDate: moment().format('YYYY-MM-DD'),
@@ -157,7 +158,7 @@ const NoticeTable: React.FC = () => {
 
     const handleEditNotice = async () => {
         try {
-            await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${editNotice.NoticeID}`, {
+            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${editNotice.NoticeID}`, {
                 title: editNotice.Title,
                 content: editNotice.Content,
                 postDate: moment().format('YYYY-MM-DD'),
@@ -173,7 +174,7 @@ const NoticeTable: React.FC = () => {
 
     const handleDeleteNotice = async (noticeId: number) => {
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${noticeId}`);
+            await apiClient.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${noticeId}`);
             alert('공지사항이 삭제되었습니다.');
             setTotalNotices((prev) => prev - 1); // 공지사항 총 개수 감소
             fetchNotices(currentPage); // 새로고침하여 목록 업데이트

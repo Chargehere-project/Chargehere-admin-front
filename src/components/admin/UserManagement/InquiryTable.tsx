@@ -5,6 +5,7 @@
     import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5'; // 페이지네이션 아이콘
     import InquirySearch from './InquirySearch'; // 검색 컴포넌트
     import styles from '@/styles/admin/InquiryManagement.module.css';
+    import apiClient from '@/utils/apiClient';
 
     const ITEMS_PER_PAGE = 10; // 페이지 당 아이템 수
     const VISIBLE_PAGE_RANGE = 2; // 보이는 페이지 범위
@@ -31,7 +32,7 @@
         const fetchInquiries = async (page = 1) => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/inquiries`, {
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/inquiries`, {
                     params: {
                         page,
                         limit: ITEMS_PER_PAGE,
@@ -59,7 +60,9 @@
         useEffect(() => {
             const fetchTotalInquiries = async () => {
                 try {
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/inquiries/count`);
+                    const response = await apiClient.get(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inquiries/count`
+                    );
                     setTotalInquiries(response.data.count);
                 } catch (error) {
                     console.error('총 문의 개수를 가져오는데 실패했습니다:', error);
@@ -197,7 +200,7 @@
         const handleOpenModal = async (inquiry: any) => {
             setSelectedInquiry(inquiry); // 선택된 문의 설정
             try {
-                const response = await axios.get(
+                const response = await apiClient.get(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inquiries/${inquiry.InquiryID}/replies`
                 );
                 if (response.data.reply) {
@@ -226,7 +229,7 @@
             }
 
             try {
-                await axios.post(
+                await apiClient.post(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/inquiries/${selectedInquiry.InquiryID}/replies`,
                     { ReplyContent: replyContent }
                 );

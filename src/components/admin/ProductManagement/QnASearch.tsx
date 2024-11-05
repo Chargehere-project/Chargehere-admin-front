@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styles from '@/styles/admin/ProductManagement.module.css';
 
+
 const QnASearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void }> = ({ onSearch, onReset }) => {
     const [searchType, setSearchType] = useState('UserID'); // 검색 타입 (회원 ID, 상품 ID, 문의 내용)
     const [searchValue, setSearchValue] = useState(''); // 검색 값

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import moment from 'moment';
 import styles from '@/styles/admin/ProductManagement.module.css';
+import apiClient from '@/utils/apiClient';
 
 const ProductSearch: React.FC<{ onSearch: (data: any, params: any) => void; onReset: () => void }> = ({
     onSearch,
@@ -30,7 +31,7 @@ const ProductSearch: React.FC<{ onSearch: (data: any, params: any) => void; onRe
         console.log('검색 요청 파라미터:', params); // 상품 ID 및 기간 필터 확인용 로그
 
         try {
-            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/search`, {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/search`, {
                 params,
             });
             onSearch(response.data, params);

@@ -5,6 +5,8 @@
     import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
     import styles from '@/styles/admin/CouponManagement.module.css';
     import CouponSearch from './CouponSearch';
+    import apiClient from '@/utils/apiClient';
+
 
     const ITEMS_PER_PAGE = 10; // 페이지당 항목 수
 
@@ -98,7 +100,7 @@
                         ? `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/search`
                         : `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/issued`;
 
-                const response = await axios.get(endpoint, {
+                const response = await apiClient.get(endpoint, {
                     params: {
                         page,
                         limit: ITEMS_PER_PAGE,
@@ -147,7 +149,7 @@
         // 유저 쿠폰 총 개수 가져오기
         const fetchTotalUserCouponsCount = async () => {
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/count`);
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/count`);
                 setTotalUserCoupons(response.data.count);
                 console.log('Total User Coupons:', response.data.count);
             } catch (error) {
@@ -178,7 +180,7 @@
         ) => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, {
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, {
                     params: {
                         page,
                         limit: ITEMS_PER_PAGE,
@@ -202,7 +204,7 @@
         const fetchUsers = async (query = '') => {
             console.log('Fetching users with query:', query);
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
                     params: {
                         searchType: searchBy,
                         searchValue: userSearchQuery,
@@ -306,7 +308,10 @@
         // 새로운 쿠폰 생성 처리
         const handleCreateCoupon = async () => {
             try {
-                const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, newCoupon);
+                const response = await apiClient.post(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`,
+                    newCoupon
+                );
                 if (response.data.message === '쿠폰이 성공적으로 생성되었습니다.') {
                     alert('쿠폰이 생성되었습니다.');
                     fetchCouponOptions(); // 쿠폰 생성 후 쿠폰 목록 새로 가져오기
@@ -325,7 +330,7 @@
         // 쿠폰 옵션 목록 새로 고침 함수
         const fetchCouponOptions = async () => {
             try {
-                const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`);
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`);
                 setCouponOptions(response.data.coupons || []); // 쿠폰 옵션 목록 설정
             } catch (error) {
                 console.error('쿠폰 옵션 가져오기 실패:', error);
@@ -335,7 +340,7 @@
         // 쿠폰 삭제 처리 - 상태를 deleted로 변경
         const handleDeleteCoupon = async (couponId: number) => {
             try {
-                await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/${couponId}/status`, {
+                await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/${couponId}/status`, {
                     status: 'deleted',
                 });
                 alert('쿠폰이 삭제되었습니다.');
@@ -361,13 +366,16 @@
                 for (const user of selectedUsers) {
                     const loginID = user.LoginID;
 
-                    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/issue`, {
-                        loginID, // User의 LoginID
-                        userID: user.UserID, // User의 ID
-                        couponID: selectedCoupon.CouponID,
-                        issuedAt: new Date().toISOString(),
-                        isUsed: false,
-                    });
+                    const response = await apiClient.post(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/issue`,
+                        {
+                            loginID, // User의 LoginID
+                            userID: user.UserID, // User의 ID
+                            couponID: selectedCoupon.CouponID,
+                            issuedAt: new Date().toISOString(),
+                            isUsed: false,
+                        }
+                    );
 
                     if (response.data.message !== '쿠폰이 성공적으로 발급되었습니다.') {
                         throw new Error(response.data.message);
@@ -410,7 +418,7 @@
             } else {
                 try {
                     // 전체 유저 정보를 서버에서 가져옴
-                    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
+                    const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
                     const allUsers = response.data.users;
 
                     // 모든 유저 데이터를 users에 저장하고 selectedUsers에 모든 user 정보를 추가
