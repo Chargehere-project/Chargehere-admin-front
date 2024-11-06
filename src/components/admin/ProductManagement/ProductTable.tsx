@@ -151,8 +151,8 @@ const ProductTable: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append('name', newProduct.name);
-            formData.append('price', newProduct.price);
-            formData.append('discountRate', newProduct.discountRate);
+            formData.append('price', newProduct.price.toString()); // 문자열로 변환
+            formData.append('discountRate', newProduct.discountRate.toString()); // 문자열로 변환
             formData.append('description', newProduct.description);
             formData.append('status', newProduct.status);
             if (newProduct.thumbnail) {
@@ -376,7 +376,7 @@ const ProductTable: React.FC = () => {
                         })
                     ) : (
                         <tr>
-                            <td colSpan="10" style={{ textAlign: 'center' }}>
+                            <td colSpan={10} style={{ textAlign: 'center' }}>
                                 검색된 상품이 없습니다.
                             </td>
                         </tr>
