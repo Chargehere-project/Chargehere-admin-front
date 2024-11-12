@@ -31,6 +31,13 @@ const NoticeSearch: React.FC<NoticeSearchProps> = ({ onSearch, onReset }) => {
         onReset(); // 부모 컴포넌트로 초기화 요청
     };
 
+    // 엔터 키 핸들러
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <div className={styles.searchContainer}>
             <table className={styles.searchTable}>
@@ -41,9 +48,9 @@ const NoticeSearch: React.FC<NoticeSearchProps> = ({ onSearch, onReset }) => {
                         <td className={styles.inputCell}>
                             <input
                                 type="text"
-                                placeholder="검색어 입력"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
+                                onKeyDown={handleKeyDown} // 엔터 키 이벤트 추가
                             />
                         </td>
 

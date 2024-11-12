@@ -26,23 +26,41 @@ const PointsTable: React.FC = () => {
     const [users, setUsers] = useState([]); // 유저 목록
     const [searchBy, setSearchBy] = useState('id'); // 기본 검색 기준을 ID로 설정
     const [totalPointsCount, setTotalPointsCount] = useState(0); // 총 포인트 개수 저장
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
+    const [searchTotalPages, setSearchTotalPages] = useState(1);
+    const [searchCurrentPage, setSearchCurrentPage] = useState(1);
+    const [searchParams, setSearchParams] = useState(null); // 검색 조건 저장
 
-    // 페이지에 해당하는 포인트 내역 가져오기
-    const fetchPointsHistory = async (page: number = 1) => {
+    // 포인트 내역 가져오기 함수
+    const fetchPointsHistory = async (page: number = 1, params = {}) => {
         setIsLoading(true);
         try {
-            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
-                params: {
-                    page, // 현재 페이지
-                    limit: ITEMS_PER_PAGE, // 페이지당 항목 수
-                    sort: 'createdAt', // 정렬할 필드
-                    order: 'ASC', // 내림차순 정렬
-                },
-            });
-            console.log('포인트 내역:', response.data.points);
+            let response;
+            const queryParams = { ...params, page, limit: ITEMS_PER_PAGE };
 
-            setPointsHistory(response.data.points); // 해당 페이지의 포인트 내역 저장
-            setTotalPages(response.data.totalPages); // 전체 페이지 수 업데이트
+            if (params && Object.keys(params).length > 0) {
+                // 검색 조건이 있을 경우 searchPoints API 호출
+                response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/search`, {
+                    params: queryParams,
+                    withCredentials: true,
+                });
+            } else if (searchParams) {
+                // 이전 검색 조건을 유지
+                response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/search`, {
+                    params: { ...searchParams, page, limit: ITEMS_PER_PAGE },
+                    withCredentials: true,
+                });
+            } else {
+                // 기본 포인트 내역 API 호출
+                response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
+                    params: queryParams,
+                    withCredentials: true,
+                });
+            }
+
+            setPointsHistory(response.data.points); // 데이터 업데이트
+            setTotalPages(response.data.totalPages); // 총 페이지 수 업데이트
             setCurrentPage(page); // 현재 페이지 업데이트
             setIsLoading(false);
         } catch (error) {
@@ -59,7 +77,9 @@ const PointsTable: React.FC = () => {
     // 총 포인트 개수를 가져오는 함수
     const fetchTotalPointsCount = async () => {
         try {
-            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/count`);
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/count`, {
+                withCredentials: true, // 쿠키 포함 설정
+            });
             setTotalPointsCount(response.data.count); // 총 개수 업데이트
         } catch (error) {
             console.error('총 포인트 개수를 가져오는 데 실패했습니다:', error);
@@ -71,26 +91,38 @@ const PointsTable: React.FC = () => {
         fetchTotalPointsCount(); // 초기 로드 시 총 개수를 불러옴
     }, []);
 
-    // 검색 결과 핸들러
-    const handleSearch = (searchResults: any) => {
-        setPointsHistory(searchResults); // 검색 결과 업데이트
+    // 검색 핸들러
+    const handleSearch = (searchData) => {
+        setSearchParams(searchData); // 검색 조건 저장
+        fetchPointsHistory(1, searchData); // 검색 시 첫 페이지로 설정
+    };
+
+    // 페이지 변경 핸들러
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
+        fetchPointsHistory(page, searchParams); // 페이지 변경 시 검색 조건 유지
     };
 
     // 초기화 핸들러
     const handleReset = () => {
-        fetchPointsHistory(1); // 초기화 시 전체 목록 다시 로드
+        setSearchParams(null); // 검색 조건 초기화
+        fetchPointsHistory(1); // 전체 목록을 첫 페이지부터 로드
     };
+
+    useEffect(() => {
+        fetchPointsHistory(1); // 초기 데이터 로드
+    }, []);
 
     // 한 페이지에 해당하는 포인트 내역 가져오기
     const getCurrentPagePoints = () => {
         return pointsHistory;
     };
 
-    // 페이지 변경 핸들러
-    const handlePageChange = (page: number) => {
-        if (page < 1 || page > totalPages) return;
-        fetchPointsHistory(page); // 페이지 변경 시 해당 페이지 데이터 로드
-    };
+    // // 페이지 변경 핸들러
+    // const handlePageChange = (page: number) => {
+    //     if (page < 1 || page > totalPages) return;
+    //     fetchPointsHistory(page); // 페이지 변경 시 해당 페이지 데이터 로드
+    // };
 
     // 페이지 그룹을 계산하여 버튼 목록을 반환하는 함수
     const getPageGroup = () => {
@@ -128,11 +160,37 @@ const PointsTable: React.FC = () => {
 
     // 페이지네이션 버튼을 렌더링하는 함수
     const renderPaginationButtons = () => {
-        const pages = getPageGroup();
-        return pages.map((page, index) => (
+        const total = isSearching ? searchTotalPages : totalPages; // 검색 모드와 전체 데이터 모드에 따른 총 페이지 수
+        const pages = [];
+
+        // 총 페이지 수가 5 이하인 경우, 모든 페이지를 보여줌
+        if (total <= 5) {
+            for (let i = 1; i <= total; i++) {
+                pages.push(i);
+            }
+        } else {
+            // 현재 페이지가 3 이하인 경우, 처음 5개의 페이지를 보여줌
+            if (currentPage <= 3) {
+                for (let i = 1; i <= 5; i++) {
+                    pages.push(i);
+                }
+            }
+            // 현재 페이지가 마지막 3개의 페이지에 가까운 경우, 마지막 5개의 페이지를 보여줌
+            else if (currentPage >= total - 2) {
+                for (let i = total - 4; i <= total; i++) {
+                    pages.push(i);
+                }
+            }
+            // 그 외의 경우, 현재 페이지를 중심으로 앞뒤로 2개의 페이지를 보여줌
+            else {
+                pages.push(currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2);
+            }
+        }
+
+        return pages.map((page) => (
             <button
-                key={index}
-                onClick={() => typeof page === 'number' && handlePageChange(page)}
+                key={page}
+                onClick={() => handlePageChange(page)}
                 className={currentPage === page ? styles.activePage : ''}
                 style={{
                     padding: '8px 12px',
@@ -160,6 +218,7 @@ const PointsTable: React.FC = () => {
                     searchType: searchBy,
                     searchValue: userSearchQuery,
                 },
+                withCredentials: true, // 쿠키 포함 설정
             });
 
             // 전체 응답 데이터 출력
@@ -223,22 +282,28 @@ const PointsTable: React.FC = () => {
 
     // 전체 선택 핸들러 수정
     const handleSelectAll = async () => {
-        if (selectedUsers.length === users.length && users.length > 0) {
-            // 이미 전체 선택이 된 경우 전체 해제
+        if (selectAll) {
+            // If currently selected, clear all selected users
             setSelectedUsers([]);
+            setSelectAll(false);
         } else {
             try {
-                // 전체 유저 정보를 서버에서 가져옴
-                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
-                const allUsers = response.data.users;
-
-                // 모든 유저 데이터를 users에 저장하고 selectedUsers에 모든 user 정보를 추가
-                setUsers(allUsers);
-                setSelectedUsers(allUsers.map((user) => ({ LoginID: user.LoginID, Name: user.Name })));
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
+                    params: { limit: 'all' }, // Fetch all users
+                    withCredentials: true,
+                });
+                setUsers(response.data.users);
+                setSelectedUsers(response.data.users.map((user) => ({ LoginID: user.LoginID, Name: user.Name })));
+                setSelectAll(true); // Mark as selected
             } catch (error) {
-                console.error('모든 유저 정보 가져오기 실패:', error);
+                console.error('전체 선택을 위한 모든 유저 가져오기에 실패했습니다:', error);
             }
         }
+    };
+
+    // 개별 유저 제거 핸들러 추가
+    const handleUserRemove = (loginID) => {
+        setSelectedUsers(selectedUsers.filter((user) => user.LoginID !== loginID));
     };
 
     // 포인트 지급 저장
@@ -250,11 +315,17 @@ const PointsTable: React.FC = () => {
 
         try {
             for (const user of selectedUsers) {
-                await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
-                    loginID: user.LoginID,
-                    Amount: pointsAmount,
-                    Description: pointsReason,
-                });
+                await apiClient.post(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`,
+                    {
+                        loginID: user.LoginID,
+                        Amount: pointsAmount,
+                        Description: pointsReason,
+                    },
+                    {
+                        withCredentials: true, // 쿠키 포함 설정
+                    }
+                );
             }
             alert('포인트가 성공적으로 지급되었습니다.');
             fetchPointsHistory(currentPage); // 지급 후 내역 갱신
@@ -265,23 +336,44 @@ const PointsTable: React.FC = () => {
     };
 
     // 포인트 취소
-    const handleCancelPoint = async (pointId: number, loginId: string, amount: number) => {
+    const handleCancelPoint = async (pointId, loginId, amount) => {
         try {
             console.log('취소 요청 - pointId:', pointId, 'loginId:', loginId, 'amount:', amount);
 
-            // 한번 취소된 포인트는 다시 취소할 수 없게 처리
-            const response = await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/cancel`, {
-                pointID: pointId,
-                loginID: loginId,
-                Amount: -Math.abs(amount), // 취소로 인한 금액은 차감 처리
-                Description: '취소로 인한 차감',
-            });
+            // 서버에 취소 요청 보내기
+            const response = await apiClient.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/cancel`,
+                {
+                    pointID: pointId,
+                    loginID: loginId,
+                    Amount: -Math.abs(amount), // 차감 금액
+                    Description: '취소로 인한 차감',
+                },
+                {
+                    withCredentials: true,
+                }
+            );
 
             console.log('취소 응답 데이터:', response.data);
 
             if (response.data && response.data.newPoints) {
+                // pointsHistory 상태 업데이트: 취소 내역을 추가하고 기존 내역 수정
+                setPointsHistory((prevHistory) => [
+                    {
+                        PointID: response.data.newPoints.PointID,
+                        PointUser: { LoginID: loginId },
+                        Description: '취소로 인한 차감',
+                        Amount: -Math.abs(amount),
+                        ChargeType: 'Deducted',
+                        createdAt: new Date().toISOString(),
+                        isCancelled: true,
+                    },
+                    ...prevHistory.map((point) =>
+                        point.PointID === pointId ? { ...point, isCancelled: true } : point
+                    ),
+                ]);
+
                 alert('포인트가 성공적으로 취소되었습니다.');
-                fetchPointsHistory(currentPage); // 취소 후 데이터를 새로 불러옴
             } else {
                 console.error('취소 항목 생성 실패');
             }
@@ -339,11 +431,16 @@ const PointsTable: React.FC = () => {
                                                 style={{
                                                     color: 'white',
                                                     backgroundColor:
-                                                        point.ChargeType === 'Deducted' ? '#ccc' : '#dc3545',
+                                                        point.ChargeType === 'Deducted' || point.isCancelled
+                                                            ? '#ccc'
+                                                            : '#dc3545', // Deducted이거나 취소된 경우 회색(#ccc), 그렇지 않으면 빨간색(#dc3545)
                                                     padding: '5px 10px',
                                                     border: 'none',
                                                     borderRadius: '5px',
-                                                    cursor: point.ChargeType === 'Deducted' ? 'not-allowed' : 'pointer',
+                                                    cursor:
+                                                        point.ChargeType === 'Deducted' || point.isCancelled
+                                                            ? 'not-allowed'
+                                                            : 'pointer', // 비활성화된 경우 'not-allowed' 커서
                                                 }}
                                                 onClick={() =>
                                                     handleCancelPoint(
@@ -352,7 +449,7 @@ const PointsTable: React.FC = () => {
                                                         point.Amount
                                                     )
                                                 }
-                                                disabled={point.ChargeType === 'Deducted'}>
+                                                disabled={point.ChargeType === 'Deducted' || point.isCancelled}>
                                                 취소
                                             </button>
                                         </td>
@@ -414,7 +511,16 @@ const PointsTable: React.FC = () => {
                     </div>
 
                     {/* 포인트 변경 모달 */}
-                    <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="포인트 변경">
+                    <Modal
+                        isOpen={isModalOpen}
+                        onRequestClose={closeModal}
+                        contentLabel="포인트 변경"
+                        style={{
+                            content: {
+                                width: '600px',
+                                margin: 'auto',
+                            },
+                        }}>
                         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>포인트 변경</h2>
                         <p style={{ textAlign: 'center', marginBottom: '20px' }}>- 적립 금액에 음수 / 차감도 가능</p>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -513,7 +619,7 @@ const PointsTable: React.FC = () => {
                                         }}>
                                         {user.Name} ({user.LoginID})
                                         <button
-                                            onClick={() => handleUserSelect(user.LoginID)}
+                                            onClick={() => handleUserRemove(user.LoginID)}
                                             style={{
                                                 background: 'transparent',
                                                 border: 'none',

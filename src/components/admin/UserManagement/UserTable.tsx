@@ -24,6 +24,9 @@
         const [isLoading, setIsLoading] = useState(true); // 로딩 상태 표시
         const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태 (열림/닫힘)
         const [selectedUser, setSelectedUser] = useState<User | null>(null); // 선택된 유저 정보
+        const [isSearching, setIsSearching] = useState(false);
+        const [searchResults, setSearchResults] = useState<User[]>([]);
+        const [searchTotalPages, setSearchTotalPages] = useState(1);
         const [editForm, setEditForm] = useState<EditForm>({
             UserID: 0,
             LoginID: '',
@@ -60,42 +63,65 @@
         }
         // 유저 목록을 페이지 단위로 가져오는 함수
         const fetchUsers = async (page: number) => {
-            setIsLoading(true); // 로딩 시작
+            if (isSearching) return; // 검색 중이면 전체 목록을 가져오지 않음
+
+            setIsLoading(true);
             try {
                 const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
                     params: { page, limit: ITEMS_PER_PAGE },
+                    withCredentials: true,
                 });
-                setUsers(response.data.users); // 페이지의 유저 목록 설정
-                setTotalPages(response.data.totalPages); // 전체 페이지 수 설정
-                setCurrentPage(response.data.currentPage); // 현재 페이지 설정
+
+                setUsers(response.data.users);
+
+                // 첫 페이지 요청 시만 totalPages 설정
+                if (page === 1 && response.data.totalPages) {
+                    setTotalPages(response.data.totalPages);
+                }
             } catch (error) {
                 console.error('회원 목록 가져오기 실패:', error);
             } finally {
-                setIsLoading(false); // 로딩 완료
+                setIsLoading(false);
             }
         };
 
-        // 초기 로딩 시 현재 페이지 유저 목록 가져오기
+        // 첫 로딩 시 전체 페이지 수와 첫 페이지 데이터 가져오기
         useEffect(() => {
             fetchUsers(currentPage);
         }, [currentPage]);
 
         // 검색 결과를 처리하는 함수
         const handleSearchResults = (data: User[]) => {
-            setUsers(data); // 검색된 유저 설정
-            setCurrentPage(1); // 첫 페이지로 이동
+            setIsSearching(true);
+            setSearchResults(data);
+            setSearchTotalPages(Math.ceil(data.length / ITEMS_PER_PAGE)); // 검색 결과에 맞게 전체 페이지 수 설정
+            setCurrentPage(1);
         };
 
         // 검색 조건 초기화 함수
         const handleReset = () => {
-            fetchUsers(1); // 첫 페이지의 유저 목록 다시 로드
+            setIsSearching(false);
+            fetchUsers(1); // 첫 페이지의 전체 유저 목록 다시 로드
         };
 
         // 페이지 변경 핸들러
         const handlePageChange = (page: number) => {
-            if (page < 1 || page > totalPages) return; // 유효한 페이지 범위 체크
+            if (page < 1 || page > (isSearching ? searchTotalPages : totalPages)) return; // 유효한 페이지 범위 체크
             setCurrentPage(page); // 페이지 번호 설정
         };
+
+        // 데이터 로드 useEffect
+        useEffect(() => {
+            if (isSearching) {
+                // 검색 중인 경우, 검색 결과에 따른 페이지네이션 적용
+                const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                setUsers(searchResults.slice(startIndex, endIndex));
+            } else {
+                // 검색 중이 아닌 경우에만 전체 유저 목록 가져오기
+                fetchUsers(currentPage);
+            }
+        }, [currentPage, isSearching, searchResults]);
 
         // 페이지 네비게이션에서 현재 보여줄 페이지 목록 계산
         const getPageGroup = () => {
@@ -111,7 +137,33 @@
 
         // 페이지네이션 버튼을 렌더링하는 함수
         const renderPaginationButtons = () => {
-            const pages = getPageGroup();
+            const total = isSearching ? searchTotalPages : totalPages; // 검색 모드와 전체 데이터 모드에 따른 총 페이지 수
+            const pages = [];
+
+            // 총 페이지 수가 5 이하인 경우, 모든 페이지를 보여줌
+            if (total <= 5) {
+                for (let i = 1; i <= total; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // 현재 페이지가 3 이하인 경우, 처음 5개의 페이지를 보여줌
+                if (currentPage <= 3) {
+                    for (let i = 1; i <= 5; i++) {
+                        pages.push(i);
+                    }
+                }
+                // 현재 페이지가 마지막 3개의 페이지에 가까운 경우, 마지막 5개의 페이지를 보여줌
+                else if (currentPage >= total - 2) {
+                    for (let i = total - 4; i <= total; i++) {
+                        pages.push(i);
+                    }
+                }
+                // 그 외의 경우, 현재 페이지를 중심으로 앞뒤로 2개의 페이지를 보여줌
+                else {
+                    pages.push(currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2);
+                }
+            }
+
             return pages.map((page) => (
                 <button
                     key={page}
@@ -133,6 +185,16 @@
                 </button>
             ));
         };
+
+        useEffect(() => {
+            if (isSearching) {
+                const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+                const endIndex = startIndex + ITEMS_PER_PAGE;
+                setUsers(searchResults.slice(startIndex, endIndex)); // 검색 결과 페이징 처리
+            } else {
+                fetchUsers(currentPage); // 전체 유저 목록 페이징 처리
+            }
+        }, [currentPage, isSearching, searchResults]);
 
         // 유저 정보 수정 핸들러
         const handleEdit = (user: User) => {
@@ -158,14 +220,26 @@
         // 유저 정보 수정 완료 핸들러
         const handleSaveEdit = async () => {
             try {
+                // API 요청
                 await apiClient.put(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${selectedUser?.UserID}`,
-                    editForm
-                ); // 유저 정보 수정 API 요청
-                fetchUsers(currentPage); // 유저 목록 다시 가져오기
-                closeModal(); // 모달 닫기
+                    editForm,
+                    {
+                        withCredentials: true, // 쿠키 포함
+                    }
+                );
+
+                // 성공 시 유저 목록을 다시 가져오기
+                fetchUsers(currentPage);
+
+                // 모달 닫기
+                closeModal();
             } catch (error) {
+                // 오류 메시지 출력
                 console.error('유저 정보 수정 실패:', error);
+
+                // 사용자에게 오류 메시지 표시 (예: alert)
+                alert('유저 정보 수정에 실패했습니다. 다시 시도해 주세요.');
             }
         };
 
@@ -173,9 +247,11 @@
         const handleDelete = async (userId: number) => {
             if (window.confirm('해당 유저를 삭제하시겠습니까?')) {
                 try {
-                    await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/status`, {
-                        status: 'Withdrawn',
-                    });
+                    await apiClient.put(
+                        `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${userId}/status`,
+                        { status: 'Withdrawn' },
+                        { withCredentials: true } // 쿠키 포함
+                    );
                     fetchUsers(currentPage); // 유저 목록 다시 가져오기
                 } catch (error) {
                     console.error('유저 상태 변경 실패:', error);
@@ -183,13 +259,14 @@
             }
         };
 
-        // 유저 활성/비활성 상태 변경 핸들러
         const handleToggleStatus = async (user: User) => {
             const newStatus = user.Status === 'Active' ? 'Inactive' : 'Active'; // 상태 변경
             try {
-                await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${user.UserID}/status`, {
-                    status: newStatus,
-                });
+                await apiClient.put(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/${user.UserID}/status`,
+                    { status: newStatus }, // 데이터 객체
+                    { withCredentials: true } // 설정 객체
+                );
                 fetchUsers(currentPage); // 유저 목록 다시 가져오기
             } catch (error) {
                 console.error('유저 상태 변경 실패:', error);
@@ -303,7 +380,16 @@
                         </div>
 
                         {/* 유저 수정 모달 */}
-                        <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="유저 수정">
+                        <Modal
+                            isOpen={isModalOpen}
+                            onRequestClose={closeModal}
+                            contentLabel="유저 수정"
+                            style={{
+                                content: {
+                                    width: '600px',
+                                    margin: 'auto',
+                                },
+                            }}>
                             <div className={styles.modalHeader}>회원정보 조회/수정</div>
                             <form className={styles.modalForm}>
                                 <div className={styles.formGroup}>

@@ -25,12 +25,7 @@ const PointsSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
                 endDate: endDate || null,
             };
 
-            // 서버에 검색 요청
-            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/search`, {
-                params,
-            });
-
-            onSearch(response.data); // 검색된 결과를 부모 컴포넌트로 전달
+            onSearch(params); // 검색 조건을 부모 컴포넌트로 전달
         } catch (error) {
             console.error('검색 실패:', error);
         }
@@ -45,15 +40,27 @@ const PointsSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
         onReset(); // 부모 컴포넌트로 초기화 요청
     };
 
+    // 엔터 키 핸들러
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <div className={styles.searchContainer}>
             <table className={styles.searchTable}>
                 <tbody>
                     <tr>
                         {/* 회원 아이디 검색 */}
-                        <td className={styles.labelCell}>로그인 ID</td>
+                        <td className={styles.labelCell}>회원 아이디</td>
                         <td className={styles.inputCell}>
-                            <input type="text" value={loginID} onChange={(e) => setLoginID(e.target.value)} />
+                            <input
+                                type="text"
+                                value={loginID}
+                                onChange={(e) => setLoginID(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                            />
                         </td>
 
                         {/* 적립 날짜 범위 */}
