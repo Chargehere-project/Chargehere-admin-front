@@ -18,12 +18,12 @@ const AdminLogin = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // 쿠키 포함
                 body: JSON.stringify({ username, password }),
             });
 
+
             if (response.ok) {
-                const { token } = await response.json();
-                localStorage.setItem('adminToken', token);
 
                 // 인증 상태를 업데이트하기 위해 checkAuth 호출
                 await checkAuth();

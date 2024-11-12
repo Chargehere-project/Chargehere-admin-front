@@ -36,6 +36,13 @@ const InquirySearch: React.FC<{ onSearch: (data: any) => void; onReset: () => vo
         onReset(); // 부모 컴포넌트로 초기화 요청
     };
 
+    // 엔터 키 핸들러
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <div className={styles.searchContainer}>
             <table className={styles.searchTable}>
@@ -45,7 +52,7 @@ const InquirySearch: React.FC<{ onSearch: (data: any) => void; onReset: () => vo
                         <td className={styles.labelCell}>조건 검색</td>
                         <td className={styles.inputCell}>
                             <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
-                                <option value="LoginID">로그인 ID</option>
+                                <option value="LoginID">회원 아이디</option>
                                 <option value="Content">문의 내용</option>
                             </select>
                             <input
@@ -53,6 +60,7 @@ const InquirySearch: React.FC<{ onSearch: (data: any) => void; onReset: () => vo
                                 placeholder="검색어 입력"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
+                                onKeyDown={handleKeyDown} 
                             />
                         </td>
 

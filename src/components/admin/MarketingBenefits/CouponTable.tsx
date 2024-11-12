@@ -41,7 +41,7 @@ const CouponTable: React.FC = () => {
     const [filterName, setFilterName] = useState(''); // 쿠폰명 필터
     const [filterStartDate, setFilterStartDate] = useState(''); // 시작일 필터
     const [filterEndDate, setFilterEndDate] = useState(''); // 종료일 필터
-    const [filterStatus, setFilterStatus] = useState('active'); // 상태 필터
+    const [filterStatus, setFilterStatus] = useState(''); // 상태 필터
     const [searchBy, setSearchBy] = useState('name'); // 검색 기준 초기값을 이름으로 설정
     const [selectAll, setSelectAll] = useState(false);
     const [totalCoupons, setTotalCoupons] = useState(0); // 전체 쿠폰 개수
@@ -54,7 +54,9 @@ const CouponTable: React.FC = () => {
             try {
                 const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, {
                     params: { fetchTotalCount: 'true' },
+                    withCredentials: true, // 쿠키 포함 설정
                 });
+
                 if (response.data.totalItems) {
                     setTotalCoupons(response.data.totalItems);
                     console.log('Total Coupons:', response.data.totalItems);
@@ -71,20 +73,26 @@ const CouponTable: React.FC = () => {
 
     // 검색 핸들러
     const handleSearch = (criteria) => {
-        setSearchCriteria(criteria);
-        setCurrentPage(1); // 검색 후 페이지를 1로 설정
+        setSearchCriteria(criteria); // 검색 기준을 상태로 설정
+        setCurrentPage(1); // 검색 후 첫 페이지로 이동
+        fetchCoupons(1, criteria); // 첫 페이지와 검색 조건으로 데이터 가져오기
     };
 
     // 페이지 변경 시 현재 페이지와 검색 기준을 사용하여 fetchCoupons 호출
     const handlePageChange = (page) => {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
+        fetchCoupons(page, searchCriteria); // 검색 조건에 따른 페이지를 불러옵니다.
     };
 
     // 페이지나 검색 조건이 변경될 때마다 fetchCoupons 호출
     useEffect(() => {
         fetchCoupons(currentPage, searchCriteria); // 현재 페이지와 검색 기준으로 데이터 가져오기
     }, [currentPage, searchCriteria]);
+
+    useEffect(() => {
+        fetchCouponOptions();
+    }, []); // CouponTable 컴포넌트 초기 로드 시 한 번만 실행
 
     // 쿠폰 목록 불러오기 함수 (검색 기준과 페이지를 함께 사용)
     const fetchCoupons = async (page = 1, criteria = {}) => {
@@ -101,17 +109,11 @@ const CouponTable: React.FC = () => {
 
             const response = await apiClient.get(endpoint, {
                 params: {
-                    page,
-                    limit: ITEMS_PER_PAGE,
+                    page, // 현재 페이지 번호
+                    limit: ITEMS_PER_PAGE, // 페이지당 항목 수
                     ...filteredCriteria,
                 },
-            });
-
-            console.log('Fetched Coupons:', response.data);
-            console.log('Response Structure:', {
-                issuedCoupons: response.data.issuedCoupons,
-                totalItems: response.data.totalItems,
-                totalPages: response.data.totalPages,
+                withCredentials: true, // 쿠키 포함 설정
             });
 
             if (response.data && Array.isArray(response.data.issuedCoupons || response.data)) {
@@ -126,15 +128,18 @@ const CouponTable: React.FC = () => {
                 }));
 
                 setCoupons(couponsWithUserInfo);
-                setTotalPages(response.data.totalPages || 1);
-                setTotalCoupons(totalItems);
+                setTotalPages(response.data.totalPages || 1); // 검색 결과에 맞는 총 페이지 수
+                setTotalCoupons(totalItems); // 검색 결과에 맞는 총 항목 수
+                setCurrentPage(page); // 현재 페이지 상태 설정
             } else {
                 setCoupons([]);
+                setTotalPages(1); // 검색 결과가 없을 경우 페이지 수를 1로 설정
                 console.warn('쿠폰 데이터 형식이 올바르지 않습니다.');
             }
         } catch (error) {
             console.error('쿠폰 목록 가져오기 실패:', error);
             setCoupons([]);
+            setTotalPages(1);
         } finally {
             setIsLoading(false);
         }
@@ -148,7 +153,9 @@ const CouponTable: React.FC = () => {
     // 유저 쿠폰 총 개수 가져오기
     const fetchTotalUserCouponsCount = async () => {
         try {
-            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/count`);
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/count`, {
+                withCredentials: true, // 쿠키 포함 설정
+            });
             setTotalUserCoupons(response.data.count);
             console.log('Total User Coupons:', response.data.count);
         } catch (error) {
@@ -169,10 +176,13 @@ const CouponTable: React.FC = () => {
         fetchCoupons(1, { name: '', startDate: '', endDate: '', status: '' }); // 빈 검색 조건으로 첫 번째 페이지를 로드합니다
     };
 
-    // 쿠폰 리스트 가져오기 (필터링 포함)
-    const fetchCouponList = async (page: number = 1, name = '', startDate = '', endDate = '', status = 'active') => {
+    // 쿠폰 리스트 불러오기 함수
+    const fetchCouponList = async (page = 1, name = '', startDate = '', endDate = '', status = '') => {
         setIsLoading(true);
         try {
+            // 전체 상태로 설정된 경우, status 값을 undefined로 변경하여 필터링을 적용하지 않음
+            const adjustedStatus = status === '전체' ? undefined : status;
+
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, {
                 params: {
                     page,
@@ -180,9 +190,11 @@ const CouponTable: React.FC = () => {
                     name,
                     startDate,
                     endDate,
-                    status,
+                    status: adjustedStatus, // 조정된 status 값을 사용
                 },
+                withCredentials: true,
             });
+
             setCouponList(response.data.coupons);
             setTotalPages(response.data.totalPages);
             setCurrentPage(page);
@@ -202,6 +214,7 @@ const CouponTable: React.FC = () => {
                     searchType: searchBy,
                     searchValue: userSearchQuery,
                 },
+                withCredentials: true, // 쿠키 포함 설정
             });
 
             // 전체 응답 데이터 출력
@@ -225,6 +238,7 @@ const CouponTable: React.FC = () => {
     // 모달 열기
     const openModal = (type: string, coupon = null) => {
         setModalType(type);
+        setFilterStatus('전체');
         if (coupon) {
             setSelectedCoupon({
                 id: coupon.CouponID,
@@ -253,27 +267,37 @@ const CouponTable: React.FC = () => {
         }
     };
 
+    // // 모달 닫기
+    // const closeModal = () => {
+    //     setIsModalOpen(false);
+    //     setModalType('');
+    //     setSelectedCoupon(null);
+    //     setSelectedUsers([]); // 선택된 유저 초기화
+    //     setFilteredUsers([]); // 유저 목록 초기화
+
+    //     fetchCouponOptions(); // 쿠폰 옵션 목록을 새로고침
+    //     if (modalType === 'list') {
+    //         fetchCoupons(currentPage);
+    //     }
+    // };
+
     // 모달 닫기
     const closeModal = () => {
         setIsModalOpen(false);
         setModalType('');
-        setSelectedCoupon(null);
-        setSelectedUsers([]); // 선택된 유저 초기화
-        setFilteredUsers([]); // 유저 목록 초기화
-        if (modalType === 'list') {
-            fetchCoupons(currentPage);
-        }
+        fetchCouponOptions(); // 최신 쿠폰 옵션 목록 불러오기
     };
 
-    useEffect(() => {
-        if (!isModalOpen) {
-            fetchCoupons(currentPage);
-        }
-    }, [isModalOpen, currentPage]);
+    // useEffect(() => {
+    //     if (!isModalOpen) {
+    //         fetchCoupons(currentPage);
+    //     }
+    // }, [isModalOpen, currentPage]);
 
     // 필터 적용 함수
     const handleFilterApply = () => {
-        fetchCouponList(1, filterName, filterStartDate, filterEndDate, filterStatus); // 필터링 조건 전달
+        const status = filterStatus === '' ? undefined : filterStatus; // 전체 선택 시 상태 필터를 undefined로 설정
+        fetchCouponList(1, filterName, filterStartDate, filterEndDate, status); // 필터링 조건 전달
     };
 
     // 필터 초기화 함수 추가
@@ -281,7 +305,7 @@ const CouponTable: React.FC = () => {
         setFilterName('');
         setFilterStartDate('');
         setFilterEndDate('');
-        setFilterStatus('active');
+        setFilterStatus('전체');
         fetchCouponList(1); // 필터 없이 모든 쿠폰 가져오기
     };
 
@@ -301,7 +325,9 @@ const CouponTable: React.FC = () => {
     // 새로운 쿠폰 생성 처리
     const handleCreateCoupon = async () => {
         try {
-            const response = await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, newCoupon);
+            const response = await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, newCoupon, {
+                withCredentials: true, // 쿠키 포함 설정
+            });
             if (response.data.message === '쿠폰이 성공적으로 생성되었습니다.') {
                 alert('쿠폰이 생성되었습니다.');
                 fetchCouponOptions(); // 쿠폰 생성 후 쿠폰 목록 새로 가져오기
@@ -317,11 +343,14 @@ const CouponTable: React.FC = () => {
         }
     };
 
-    // 쿠폰 옵션 목록 새로 고침 함수
+    // 쿠폰 옵션 목록 불러오기
     const fetchCouponOptions = async () => {
         try {
-            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`);
-            setCouponOptions(response.data.coupons || []); // 쿠폰 옵션 목록 설정
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, {
+                withCredentials: true,
+            });
+            console.log('Fetched coupon options:', response.data.coupons); // 추가된 콘솔 로그
+            setCouponOptions(response.data.coupons || []);
         } catch (error) {
             console.error('쿠폰 옵션 가져오기 실패:', error);
         }
@@ -334,13 +363,19 @@ const CouponTable: React.FC = () => {
             return;
         }
         try {
-            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/${selectedCoupon.id}`, {
-                name: selectedCoupon.name,
-                discountAmount: selectedCoupon.discountAmount,
-                startDate: selectedCoupon.startDate,
-                expiry: selectedCoupon.expiry,
-                status: selectedCoupon.status,
-            });
+            await apiClient.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/${selectedCoupon.id}`,
+                {
+                    name: selectedCoupon.name,
+                    discountAmount: selectedCoupon.discountAmount,
+                    startDate: selectedCoupon.startDate,
+                    expiry: selectedCoupon.expiry,
+                    status: selectedCoupon.status,
+                },
+                {
+                    withCredentials: true, // 쿠키 포함 설정
+                }
+            );
             fetchCouponList(currentPage);
             openModal('list');
         } catch (error) {
@@ -351,9 +386,15 @@ const CouponTable: React.FC = () => {
     // 쿠폰 삭제 처리 - 상태를 deleted로 변경
     const handleDeleteCoupon = async (couponId: number) => {
         try {
-            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/${couponId}/status`, {
-                status: 'deleted',
-            });
+            await apiClient.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/${couponId}/status`,
+                {
+                    status: 'deleted',
+                },
+                {
+                    withCredentials: true, // 쿠키 포함 설정
+                }
+            );
             alert('쿠폰이 삭제되었습니다.');
             fetchCouponList(currentPage);
         } catch (error) {
@@ -377,13 +418,19 @@ const CouponTable: React.FC = () => {
             for (const user of selectedUsers) {
                 const loginID = user.LoginID;
 
-                const response = await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/issue`, {
-                    loginID, // User의 LoginID
-                    userID: user.UserID, // User의 ID
-                    couponID: selectedCoupon.CouponID,
-                    issuedAt: new Date().toISOString(),
-                    isUsed: false,
-                });
+                const response = await apiClient.post(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons/issue`,
+                    {
+                        loginID, // User의 LoginID
+                        userID: user.UserID, // User의 ID
+                        couponID: selectedCoupon.CouponID,
+                        issuedAt: new Date().toISOString(),
+                        isUsed: false,
+                    },
+                    {
+                        withCredentials: true, // 쿠키 포함 설정
+                    }
+                );
 
                 if (response.data.message !== '쿠폰이 성공적으로 발급되었습니다.') {
                     throw new Error(response.data.message);
@@ -420,25 +467,30 @@ const CouponTable: React.FC = () => {
 
     // 전체 선택 핸들러 수정
     const handleSelectAll = async () => {
-        if (selectedUsers.length === users.length && users.length > 0) {
-            // 이미 전체 선택이 된 경우 전체 해제
+        if (selectAll) {
+            // If currently selected, clear all selected users
             setSelectedUsers([]);
+            setSelectAll(false);
         } else {
             try {
-                // 전체 유저 정보를 서버에서 가져옴
-                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`);
-                const allUsers = response.data.users;
-
-                // 모든 유저 데이터를 users에 저장하고 selectedUsers에 모든 user 정보를 추가
-                setUsers(allUsers);
-                setSelectedUsers(allUsers.map((user) => ({ LoginID: user.LoginID, Name: user.Name })));
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users`, {
+                    params: { limit: 'all' }, // Fetch all users
+                    withCredentials: true,
+                });
+                setUsers(response.data.users);
+                setSelectedUsers(response.data.users.map((user) => ({ LoginID: user.LoginID, Name: user.Name })));
+                setSelectAll(true); // Mark as selected
             } catch (error) {
-                console.error('모든 유저 정보 가져오기 실패:', error);
+                console.error('전체 선택을 위한 모든 유저 가져오기에 실패했습니다:', error);
             }
         }
     };
 
-    // 페이지네이션 버튼 생성
+    // 개별 유저 제거 핸들러 추가
+    const handleUserRemove = (loginID) => {
+        setSelectedUsers(selectedUsers.filter((user) => user.LoginID !== loginID));
+    };
+
     const renderPaginationButtons = () => {
         const pages = [];
         let startPage, endPage;
@@ -481,7 +533,7 @@ const CouponTable: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <CouponSearch onSearch={handleSearch} onReset={handleReset} fetchCouponOptions={fetchCouponOptions} />
+            <CouponSearch onSearch={handleSearch} onReset={handleReset} couponOptions={couponOptions} />
             {isLoading ? (
                 <p>Loading...</p>
             ) : (
@@ -508,8 +560,8 @@ const CouponTable: React.FC = () => {
                                     <td style={{ color: coupon.IsUsed ? 'red' : 'orange' }}>
                                         {coupon.IsUsed ? '사용됨' : '미사용'}
                                     </td>
-                                    <td>{new Date(coupon.IssuedAt).toLocaleString()}</td>
-                                    <td>{coupon.UsedAt ? new Date(coupon.UsedAt).toLocaleString() : '-'}</td>
+                                    <td>{new Date(coupon.createdAt).toLocaleString()}</td>
+                                    <td>{coupon.IsUsed ? new Date(coupon.updatedAt).toLocaleString() : '-'}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -593,7 +645,15 @@ const CouponTable: React.FC = () => {
                     </div>
 
                     {/* 모달 창 */}
-                    <Modal isOpen={isModalOpen} onRequestClose={closeModal}>
+                    <Modal
+                        isOpen={isModalOpen}
+                        onRequestClose={closeModal}
+                        style={{
+                            content: {
+                                width: modalType === 'list' ? '1000px' : '600px', // modalType에 따라 width 설정
+                                margin: 'auto',
+                            },
+                        }}>
                         {/* 쿠폰 생성 모달 */}
                         {modalType === 'create' && (
                             <div>
@@ -842,7 +902,7 @@ const CouponTable: React.FC = () => {
                                                 }}>
                                                 {user.Name} ({user.LoginID})
                                                 <button
-                                                    onClick={() => handleUserSelect(user.LoginID)}
+                                                    onClick={() => handleUserRemove(user.LoginID)}
                                                     style={{
                                                         background: 'transparent',
                                                         border: 'none',
@@ -905,6 +965,11 @@ const CouponTable: React.FC = () => {
                                         placeholder="쿠폰명 검색"
                                         value={filterName}
                                         onChange={(e) => setFilterName(e.target.value)}
+                                        onKeyPress={(e) => {
+                                            if (e.key === 'Enter') {
+                                                handleFilterApply(); // 엔터 키를 눌렀을 때 필터 적용 함수 호출
+                                            }
+                                        }}
                                     />
                                     <p className={styles.labelCell}>쿠폰 기간</p>
                                     <input
@@ -921,6 +986,7 @@ const CouponTable: React.FC = () => {
                                     />
                                     <p className={styles.labelCell}>쿠폰 상태</p>
                                     <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                                        <option value="">전체</option> {/* 전체 옵션 추가 */}
                                         <option value="active">Active</option>
                                         <option value="expired">Expired</option>
                                         <option value="deleted">Deleted</option>
@@ -929,13 +995,13 @@ const CouponTable: React.FC = () => {
                                         onClick={handleFilterApply}
                                         className={styles.button}
                                         style={{ marginLeft: '50px' }}>
-                                        필터 적용
+                                        검색
                                     </button>
                                     {/* 필터 초기화 버튼 추가 */}
                                     <button
                                         onClick={handleFilterReset}
                                         className={`${styles.button} ${styles.cancelButton}`}>
-                                        필터 초기화
+                                        초기화
                                     </button>
                                 </div>
 
@@ -962,7 +1028,21 @@ const CouponTable: React.FC = () => {
                                                           ).toLocaleString()}`
                                                         : '유효기간 없음'}
                                                 </td>
-                                                <td>{coupon.Status}</td>
+                                                <td
+                                                    style={{
+                                                        color:
+                                                            coupon.Status === 'active'
+                                                                ? 'green'
+                                                                : coupon.Status === 'expired'
+                                                                ? 'orange'
+                                                                : 'red',
+                                                    }}>
+                                                    {coupon.Status === 'active'
+                                                        ? '활성'
+                                                        : coupon.Status === 'expired'
+                                                        ? '만료'
+                                                        : '삭제'}
+                                                </td>
                                                 <td>{coupon.usedCount}</td>
                                                 <td>
                                                     <MdEdit

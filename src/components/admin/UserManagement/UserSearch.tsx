@@ -32,6 +32,7 @@ const UserSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void 
             // 서버에 검색 요청
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
                 params,
+                withCredentials: true,
             });
             onSearch(response.data); // 검색 결과를 부모 컴포넌트로 전달
         } catch (error) {
@@ -47,6 +48,13 @@ const UserSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void 
         setEndDate(''); // 종료일 초기화
         setStatus(''); // 유저 상태 초기화
         onReset(); // 부모 컴포넌트에 초기화 요청
+    };
+
+    // 엔터 키 핸들러
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
     };
 
     return (
@@ -66,6 +74,7 @@ const UserSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void 
                                 placeholder="검색어 입력"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             />
                         </td>
 

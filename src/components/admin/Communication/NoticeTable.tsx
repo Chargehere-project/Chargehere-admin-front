@@ -10,7 +10,6 @@ import styles from '@/styles/admin/Table.module.css';
 import NoticeSearch from './NoticeSearch';
 import apiClient from '@/utils/apiClient';
 
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 const ITEMS_PER_PAGE = 10;
 
 const NoticeTable: React.FC = () => {
@@ -26,11 +25,14 @@ const NoticeTable: React.FC = () => {
     useEffect(() => {
         const fetchTotalNotices = async () => {
             try {
-                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/count`);
+                const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/count`, {
+                    withCredentials: true, // 쿠키 포함 설정
+                });
                 setTotalNotices(response.data.count);
             } catch (error) {
                 console.error('공지사항 총 개수 가져오기 실패:', error);
             }
+
         };
         fetchTotalNotices();
     }, []);
@@ -39,6 +41,7 @@ const NoticeTable: React.FC = () => {
         try {
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`, {
                 params: { page, limit: ITEMS_PER_PAGE },
+                withCredentials: true, // 쿠키 포함 설정
             });
             setNotices(response.data.notices);
             setTotalPages(response.data.totalPages);
@@ -46,6 +49,7 @@ const NoticeTable: React.FC = () => {
         } catch (error) {
             console.error('공지사항 목록 가져오기 실패:', error);
         }
+
     };
 
     useEffect(() => {
@@ -65,6 +69,7 @@ const NoticeTable: React.FC = () => {
                     page: 1, // 검색 시 첫 페이지로 이동
                     limit: ITEMS_PER_PAGE,
                 },
+                withCredentials: true, // 쿠키 포함 설정
             });
             setNotices(response.data.notices); // 필터링된 공지사항 목록 설정
             setTotalPages(response.data.totalPages); // 총 페이지 수 설정
@@ -72,6 +77,7 @@ const NoticeTable: React.FC = () => {
         } catch (error) {
             console.error('검색 실패:', error);
         }
+
     };
 
     const handleReset = () => {
@@ -141,11 +147,17 @@ const NoticeTable: React.FC = () => {
 
     const handleSaveNotice = async () => {
         try {
-            await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`, {
-                title: newNotice.title,
-                content: newNotice.content,
-                postDate: moment().format('YYYY-MM-DD'),
-            });
+            await apiClient.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices`,
+                {
+                    title: newNotice.title,
+                    content: newNotice.content,
+                    postDate: moment().format('YYYY-MM-DD'),
+                },
+                {
+                    withCredentials: true, // 쿠키 포함 설정
+                }
+            );
             alert('공지사항이 등록되었습니다.');
             closeModal();
             setTotalNotices((prev) => prev + 1); // 공지사항 총 개수 증가
@@ -154,15 +166,22 @@ const NoticeTable: React.FC = () => {
             console.error('공지사항 등록 실패:', error);
             alert('공지사항 등록에 실패했습니다.');
         }
+
     };
 
     const handleEditNotice = async () => {
         try {
-            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${editNotice.NoticeID}`, {
-                title: editNotice.Title,
-                content: editNotice.Content,
-                postDate: moment().format('YYYY-MM-DD'),
-            });
+            await apiClient.put(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${editNotice.NoticeID}`,
+                {
+                    title: editNotice.Title,
+                    content: editNotice.Content,
+                    postDate: moment().format('YYYY-MM-DD'),
+                },
+                {
+                    withCredentials: true, // 쿠키 포함 설정
+                }
+            );
             alert('공지사항이 수정되었습니다.');
             closeEditModal();
             fetchNotices(currentPage); // 새로고침하여 목록 업데이트
@@ -170,18 +189,22 @@ const NoticeTable: React.FC = () => {
             console.error('공지사항 수정 실패:', error);
             alert('공지사항 수정에 실패했습니다.');
         }
+
     };
 
     const handleDeleteNotice = async (noticeId: number) => {
-        try {
-            await apiClient.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${noticeId}`);
-            alert('공지사항이 삭제되었습니다.');
-            setTotalNotices((prev) => prev - 1); // 공지사항 총 개수 감소
-            fetchNotices(currentPage); // 새로고침하여 목록 업데이트
-        } catch (error) {
-            console.error('공지사항 삭제 실패:', error);
-            alert('공지사항 삭제에 실패했습니다.');
-        }
+      try {
+          await apiClient.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/notices/${noticeId}`, {
+              withCredentials: true, // 쿠키 포함 설정
+          });
+          alert('공지사항이 삭제되었습니다.');
+          setTotalNotices((prev) => prev - 1); // 공지사항 총 개수 감소
+          fetchNotices(currentPage); // 새로고침하여 목록 업데이트
+      } catch (error) {
+          console.error('공지사항 삭제 실패:', error);
+          alert('공지사항 삭제에 실패했습니다.');
+      }
+
     };
 
     const modules = {

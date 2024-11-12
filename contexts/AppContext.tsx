@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import Cookies from 'js-cookie'; // 쿠키 라이브러리 추가
 
 interface AppContextProps {
     isAuthenticated: boolean;
@@ -11,29 +12,23 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     const checkAuth = async () => {
-        if (typeof window !== 'undefined') {
-            const token = localStorage.getItem('adminToken');
-            if (token) {
-                try {
-                    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/auth/verify`, {
-                        headers: { Authorization: `Bearer ${token}` },
-                    });
-                    if (response.ok && !isAuthenticated) {
-                        setIsAuthenticated(true);
-                    } else if (!response.ok && isAuthenticated) {
-                        localStorage.removeItem('adminToken');
-                        setIsAuthenticated(false);
-                    }
-                } catch (error) {
-                    console.error('Invalid token', error);
-                    localStorage.removeItem('adminToken');
-                    setIsAuthenticated(false);
-                }
-            } else if (isAuthenticated) {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/auth/verify`, {
+                method: 'GET',
+                credentials: 'include', // 쿠키를 포함하여 서버에 인증 요청
+            });
+
+            if (response.ok) {
+                setIsAuthenticated(true);
+            } else {
                 setIsAuthenticated(false);
             }
+        } catch (error) {
+            console.error('Authentication check failed:', error);
+            setIsAuthenticated(false);
         }
     };
+
 
 
 
