@@ -4,7 +4,7 @@ import Modal from 'react-modal';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
 import { AiOutlineClose } from 'react-icons/ai';
-import moment from 'moment-timezone';
+// import moment from 'moment-timezone';
 import styles from '@/styles/admin/ReviewManagement.module.css';
 import ReviewSearch from './ReviewSearch';
 import apiClient from '@/utils/apiClient';
@@ -285,10 +285,18 @@ const ReviewTable: React.FC = () => {
                                                 : review.Content}
                                         </td>
                                         <td>
-                                            {moment(review.ReviewDate)
-                                                .tz('Asia/Seoul')
-                                                .format('YYYY. MM. DD. A hh:mm:ss')}
+                                            {new Date(review.ReviewDate).toLocaleString('ko-KR', {
+                                                year: 'numeric',
+                                                month: '2-digit',
+                                                day: '2-digit',
+                                                hour: '2-digit',
+                                                minute: '2-digit',
+                                                second: '2-digit',
+                                                hour12: true, // 오전/오후 표기
+                                                timeZone: 'Asia/Seoul',
+                                            })}
                                         </td>
+
                                         <td>
                                             {review.Image && (
                                                 <img
@@ -444,9 +452,16 @@ const ReviewTable: React.FC = () => {
                                     type="text"
                                     value={
                                         selectedReview
-                                            ? moment(selectedReview.ReviewDate)
-                                                  .tz('Asia/Seoul')
-                                                  .format('YYYY. MM. DD. A hh:mm:ss')
+                                            ? new Date(selectedReview.ReviewDate).toLocaleString('ko-KR', {
+                                                  year: 'numeric',
+                                                  month: '2-digit',
+                                                  day: '2-digit',
+                                                  hour: '2-digit',
+                                                  minute: '2-digit',
+                                                  second: '2-digit',
+                                                  hour12: true, // 오전/오후 표기
+                                                  timeZone: 'Asia/Seoul',
+                                              })
                                             : ''
                                     }
                                     readOnly

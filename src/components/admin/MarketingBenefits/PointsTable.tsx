@@ -33,6 +33,7 @@ const PointsTable: React.FC = () => {
     const [searchParams, setSearchParams] = useState(null); // 검색 조건 저장
 
     // 포인트 내역 가져오기 함수
+    // 포인트 내역 가져오기 함수
     const fetchPointsHistory = async (page: number = 1, params = {}) => {
         setIsLoading(true);
         try {
@@ -45,16 +46,10 @@ const PointsTable: React.FC = () => {
                     params: queryParams,
                     withCredentials: true,
                 });
-            } else if (searchParams) {
-                // 이전 검색 조건을 유지
-                response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points/search`, {
-                    params: { ...searchParams, page, limit: ITEMS_PER_PAGE },
-                    withCredentials: true,
-                });
             } else {
                 // 기본 포인트 내역 API 호출
                 response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/points`, {
-                    params: queryParams,
+                    params: { page, limit: ITEMS_PER_PAGE },
                     withCredentials: true,
                 });
             }
@@ -104,9 +99,12 @@ const PointsTable: React.FC = () => {
     };
 
     // 초기화 핸들러
-    const handleReset = () => {
+    const handleReset = async () => {
+        console.log('초기화 버튼 클릭됨');
         setSearchParams(null); // 검색 조건 초기화
-        fetchPointsHistory(1); // 전체 목록을 첫 페이지부터 로드
+        setSelectAll(false); // 전체 선택 체크박스 해제
+        setSelectedUsers([]); // 선택된 유저 목록 초기화
+        await fetchPointsHistory(1); // 전체 목록을 첫 페이지부터 로드
     };
 
     useEffect(() => {

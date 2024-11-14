@@ -2,6 +2,7 @@ import axios, { AxiosRequestConfig } from 'axios';
 
 const apiClient = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
+    withCredentials: true, // 모든 요청에 쿠키 포함
 });
 
 // 요청 인터셉터 설정 - 모든 요청에 토큰 자동 추가
