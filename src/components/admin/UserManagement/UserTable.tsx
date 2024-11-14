@@ -101,9 +101,10 @@
         // 검색 조건 초기화 함수
         const handleReset = () => {
             setIsSearching(false);
+            setCurrentPage(1); // 페이지를 1로 설정
             fetchUsers(1); // 첫 페이지의 전체 유저 목록 다시 로드
         };
-
+        
         // 페이지 변경 핸들러
         const handlePageChange = (page: number) => {
             if (page < 1 || page > (isSearching ? searchTotalPages : totalPages)) return; // 유효한 페이지 범위 체크

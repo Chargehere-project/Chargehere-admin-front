@@ -47,6 +47,7 @@ const CouponTable: React.FC = () => {
     const [totalCoupons, setTotalCoupons] = useState(0); // 전체 쿠폰 개수
     const [totalUserCoupons, setTotalUserCoupons] = useState(0); // UserCoupon 총 개수 상태 추가
     const [couponOptions, setCouponOptions] = useState([]); // 쿠폰 옵션 목록
+    const [allCoupons, setAllCoupons] = useState([]); // 전체 쿠폰 목록
 
     // useEffect를 사용하여 총 쿠폰 수를 한 번만 가져오기
     useEffect(() => {
@@ -80,15 +81,16 @@ const CouponTable: React.FC = () => {
 
     // 페이지 변경 시 현재 페이지와 검색 기준을 사용하여 fetchCoupons 호출
     const handlePageChange = (page) => {
-        if (page < 1 || page > totalPages) return;
+        // 선택한 페이지가 현재 페이지와 같다면 재조회하지 않음
+        if (page === currentPage || page < 1 || page > totalPages) return;
         setCurrentPage(page);
-        fetchCoupons(page, searchCriteria); // 검색 조건에 따른 페이지를 불러옵니다.
+        fetchCoupons(page, searchCriteria); // 다른 페이지로 이동할 때만 데이터를 가져옴
     };
 
     // 페이지나 검색 조건이 변경될 때마다 fetchCoupons 호출
-    useEffect(() => {
-        fetchCoupons(currentPage, searchCriteria); // 현재 페이지와 검색 기준으로 데이터 가져오기
-    }, [currentPage, searchCriteria]);
+    // useEffect(() => {
+    //     fetchCoupons(currentPage, searchCriteria); // 현재 페이지와 검색 기준으로 데이터 가져오기
+    // }, [currentPage, searchCriteria]);
 
     useEffect(() => {
         fetchCouponOptions();
@@ -145,10 +147,10 @@ const CouponTable: React.FC = () => {
         }
     };
 
-    // 페이지 변경될 때마다 데이터 새로 가져오기
-    useEffect(() => {
-        fetchCoupons(currentPage, searchCriteria); // 현재 페이지와 검색 기준으로 데이터 가져오기
-    }, [currentPage, searchCriteria]); // searchCriteria 추가
+    // // 페이지 변경될 때마다 데이터 새로 가져오기
+    // useEffect(() => {
+    //     fetchCoupons(currentPage, searchCriteria); // 현재 페이지와 검색 기준으로 데이터 가져오기
+    // }, [currentPage, searchCriteria]); // searchCriteria 추가
 
     // 유저 쿠폰 총 개수 가져오기
     const fetchTotalUserCouponsCount = async () => {
@@ -229,6 +231,13 @@ const CouponTable: React.FC = () => {
             setUsers([]);
         }
     };
+
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        const endIndex = startIndex + ITEMS_PER_PAGE;
+        setCoupons(allCoupons.slice(startIndex, endIndex));
+        setTotalPages(Math.ceil(allCoupons.length / ITEMS_PER_PAGE));
+    }, [currentPage, allCoupons]);
 
     // 컴포넌트 마운트 시 데이터 로드
     useEffect(() => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styles from '@/styles/admin/ReviewManagement.module.css';
 
+
 const ReviewSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void }> = ({ onSearch, onReset }) => {
     const [searchType, setSearchType] = useState('Content');
     const [searchValue, setSearchValue] = useState('');
@@ -28,6 +29,13 @@ const ReviewSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
         onReset();
     };
 
+    // 엔터 키 핸들러
+    const handleKeyDown = (event: React.KeyboardEvent) => {
+        if (event.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <div className={styles.searchContainer}>
             <table className={styles.searchTable}>
@@ -37,7 +45,7 @@ const ReviewSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
                         <td className={styles.inputCell}>
                             <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
                                 <option value="ReviewID">리뷰 ID</option>
-                                <option value="UserID">회원 아이디</option>
+                                <option value="LoginID">회원 아이디</option>
                                 <option value="Content">리뷰 내용</option>
                             </select>
                             <input
@@ -45,6 +53,7 @@ const ReviewSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
                                 placeholder="검색어 입력"
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             />
                         </td>
                         <td className={styles.labelCell}>리뷰 날짜</td>
