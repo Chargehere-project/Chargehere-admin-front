@@ -51,19 +51,19 @@ const ProductTable: React.FC = () => {
         return new MyUploadAdapter(loader, handleImageUpload);
     }, []);
 
-    useEffect(() => {
-        import('@tinymce/tinymce-react')
-            .then((EditorModule) => {
-                setEditor(EditorModule.Editor);
-            })
-            .catch((error) => {
-                console.error('TinyMCE 로드 중 오류:', error);
-            });
-    }, []);
+    // useEffect(() => {
+    //     import('@tinymce/tinymce-react')
+    //         .then((EditorModule) => {
+    //             setEditor(EditorModule.Editor);
+    //         })
+    //         .catch((error) => {
+    //             console.error('TinyMCE 로드 중 오류:', error);
+    //         });
+    // }, []);
 
-    if (!editor) {
-        return <div>로딩 중...</div>;
-    }
+    // if (!editor) {
+    //     return <div>로딩 중...</div>;
+    // }
 
     const handleDescriptionChange = (content: string) => {
         setNewProduct((prevProduct) => ({
