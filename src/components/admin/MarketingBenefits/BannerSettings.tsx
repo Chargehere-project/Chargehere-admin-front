@@ -7,26 +7,32 @@ const BannerSettings: React.FC = () => {
     const [bannerPreviews, setBannerPreviews] = useState<string>('');
     const [selectedFiles, setSelectedFiles] = useState<File | null>(null);
     const [selectedBannerIndex, setSelectedBannerIndex] = useState<number>(0);
+    const [selectedCategory, setSelectedCategory] = useState<string>('banner_shop'); // 기본값 설정
     const [isUploading, setIsUploading] = useState<boolean>(false);
 
     // S3에서 배너 URL을 가져오는 함수
-
-   const fetchBanners = async () => {
-       try {
-           const response = await apiClient.get('/api/admin/getBanners', {
-               params: { category: selectedCategory, index: selectedBannerIndex },
-           });
-           setBannerPreviews(response.data.banner || '/default_banner.png'); // 기본 배너 설정
-       } catch (error) {
-           console.error('Failed to fetch banner:', error);
-           setBannerPreviews('/default_banner.png'); // 오류 시 기본 이미지로 설정
-       }
-   };
-
+    const fetchBanners = async () => {
+        try {
+            const response = await apiClient.get('/api/admin/getBanners', {
+                params: { category: selectedCategory, index: selectedBannerIndex },
+            });
+            setBannerPreviews(response.data.banner || '/default_banner.png'); // 기본 배너 설정
+        } catch (error) {
+            console.error('Failed to fetch banner:', error);
+            setBannerPreviews('/default_banner.png'); // 오류 시 기본 이미지로 설정
+        }
+    };
 
     useEffect(() => {
         fetchBanners();
-    }, [selectedBannerIndex]);
+    }, [selectedCategory, selectedBannerIndex]);
+
+    // 카테고리 변경 핸들러
+    const handleCategoryChange = (event) => {
+        setSelectedCategory(event.target.value);
+        setBannerPreviews('');
+        setSelectedFiles(null);
+    };
 
     // 배너 선택 변경 핸들러
     const handleSelectChange = (event) => {
@@ -48,11 +54,10 @@ const BannerSettings: React.FC = () => {
             setIsUploading(true); // 업로드 시작
             const formData = new FormData();
             formData.append('file', selectedFiles);
-            formData.append('category', 'banner_shop');
+            formData.append('category', selectedCategory);
             formData.append('index', String(selectedBannerIndex));
 
             try {
-                // 요청 경로를 '/api/admin/upload/banner'로 설정
                 await apiClient.post('/api/admin/upload/banner', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
@@ -68,9 +73,18 @@ const BannerSettings: React.FC = () => {
         }
     };
 
-
     return (
         <div className={styles.container}>
+            <label htmlFor="category-select">카테고리 선택:</label>
+            <select
+                id="category-select"
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+                className={styles.selectBox}>
+                <option value="banner_main">메인 배너</option>
+                <option value="banner_shop">쇼핑몰 배너</option>
+            </select>
+
             <label htmlFor="banner-select">배너 선택:</label>
             <select
                 id="banner-select"

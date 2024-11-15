@@ -296,11 +296,19 @@ const ReviewTable: React.FC = () => {
                                                 : review.Content}
                                         </td>
                                         <td>
-
-                                            {moment(review.CreatedAt)
-                                                .tz('Asia/Seoul')
-                                                .format('YYYY. MM. DD. A hh:mm:ss')}
-
+                                            {new Date(review.createdAt)
+                                                .toLocaleString('ko-KR', {
+                                                    timeZone: 'Asia/Seoul',
+                                                    year: 'numeric',
+                                                    month: '2-digit',
+                                                    day: '2-digit',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                    second: '2-digit',
+                                                    hour12: true,
+                                                })
+                                                .replace(',', '')}{' '}
+                                            {/* Replace comma with an empty space to match the format */}
                                         </td>
 
                                         <td>
@@ -391,19 +399,16 @@ const ReviewTable: React.FC = () => {
 
                     {/* 리뷰 수정 모달 */}
                     <Modal
-                    
                         isOpen={isEditModalOpen}
                         onRequestClose={closeEditModal}
                         ariaHideApp={false} // 필요 시 설정, SSR 앱에서는 false로 설정하는 경우가 있음
                         contentLabel="Edit Review Modal" // 접근성을 위한 레이블
-                         style={{
-                                content: {
-                                    width: '600px',
-                                    margin: 'auto',
-                                },
-                            }}
-                        
-                    >
+                        style={{
+                            content: {
+                                width: '600px',
+                                margin: 'auto',
+                            },
+                        }}>
                         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>리뷰 수정</h2>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                             <div
@@ -465,7 +470,6 @@ const ReviewTable: React.FC = () => {
                                     type="text"
                                     value={
                                         selectedReview
-
                                             ? new Date(selectedReview.ReviewDate).toLocaleString('ko-KR', {
                                                   year: 'numeric',
                                                   month: '2-digit',
@@ -476,7 +480,6 @@ const ReviewTable: React.FC = () => {
                                                   hour12: true, // 오전/오후 표기
                                                   timeZone: 'Asia/Seoul',
                                               })
-
                                             : ''
                                     }
                                     readOnly
