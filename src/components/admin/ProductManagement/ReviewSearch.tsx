@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styles from '@/styles/admin/ReviewManagement.module.css';
 
+
 const ReviewSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => void }> = ({ onSearch, onReset }) => {
     const [searchType, setSearchType] = useState('UserID');
     const [searchValue, setSearchValue] = useState('');
@@ -43,6 +44,7 @@ const ReviewSearch: React.FC<{ onSearch: (data: any) => void; onReset: () => voi
                         <td className={styles.labelCell}>조건 검색</td>
                         <td className={styles.inputCell}>
                             <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
+
                                 {/* <option value="ReviewID">리뷰 ID</option> */}
                                 <option value="UserID">회원 아이디</option>
                                 <option value="Content">리뷰 내용</option>

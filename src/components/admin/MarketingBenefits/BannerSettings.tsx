@@ -7,10 +7,10 @@ const BannerSettings: React.FC = () => {
     const [bannerPreviews, setBannerPreviews] = useState<string>('');
     const [selectedFiles, setSelectedFiles] = useState<File | null>(null);
     const [selectedBannerIndex, setSelectedBannerIndex] = useState<number>(0);
-    const [selectedCategory, setSelectedCategory] = useState<string>('banner_main');
-    const [isUploading, setIsUploading] = useState<boolean>(false); // 업로드 상태 표시
+    const [isUploading, setIsUploading] = useState<boolean>(false);
 
     // S3에서 배너 URL을 가져오는 함수
+
    const fetchBanners = async () => {
        try {
            const response = await apiClient.get('/api/admin/getBanners', {
@@ -26,14 +26,7 @@ const BannerSettings: React.FC = () => {
 
     useEffect(() => {
         fetchBanners();
-    }, [selectedCategory, selectedBannerIndex]);
-
-    // 카테고리 변경 핸들러
-    const handleCategoryChange = (event) => {
-        setSelectedCategory(event.target.value);
-        setBannerPreviews('');
-        setSelectedFiles(null);
-    };
+    }, [selectedBannerIndex]);
 
     // 배너 선택 변경 핸들러
     const handleSelectChange = (event) => {
@@ -55,7 +48,7 @@ const BannerSettings: React.FC = () => {
             setIsUploading(true); // 업로드 시작
             const formData = new FormData();
             formData.append('file', selectedFiles);
-            formData.append('category', selectedCategory);
+            formData.append('category', 'banner_shop');
             formData.append('index', String(selectedBannerIndex));
 
             try {
@@ -78,16 +71,6 @@ const BannerSettings: React.FC = () => {
 
     return (
         <div className={styles.container}>
-            <label htmlFor="category-select">카테고리 선택:</label>
-            <select
-                id="category-select"
-                value={selectedCategory}
-                onChange={handleCategoryChange}
-                className={styles.selectBox}>
-                <option value="banner_main">전기차</option>
-                <option value="banner_shop">쇼핑몰</option>
-            </select>
-
             <label htmlFor="banner-select">배너 선택:</label>
             <select
                 id="banner-select"
