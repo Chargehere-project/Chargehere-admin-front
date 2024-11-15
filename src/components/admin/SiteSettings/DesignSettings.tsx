@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styles from '@/styles/admin/DesignSettings.module.css';
-
+import apiClient from '@/utils/apiClient';
 
 const DesignSettings: React.FC = () => {
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
     const [selectedLogoFile, setSelectedLogoFile] = useState<File | null>(null);
     const [selectedFaviconFile, setSelectedFaviconFile] = useState<File | null>(null);
+
+    // Fetch latest logo and favicon from S3
+    useEffect(() => {
+        const fetchInitialFiles = async () => {
+            try {
+                const logoResponse = await apiClient.get('/api/admin/files/logo');
+                const faviconResponse = await apiClient.get('/api/admin/files/favicon');
+                setLogoPreview(logoResponse.data.fileUrl || null);
+                setFaviconPreview(faviconResponse.data.fileUrl || null);
+            } catch (error) {
+                console.error('Failed to fetch initial files:', error);
+            }
+        };
+
+        fetchInitialFiles();
+    }, []);
 
     const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -16,51 +32,6 @@ const DesignSettings: React.FC = () => {
             setLogoPreview(localPreviewUrl);
             setSelectedLogoFile(file);
         }
-    };
-
-    // const handleLogoUpload = async () => {
-    //     if (selectedLogoFile) {
-    //         const formData = new FormData();
-    //         formData.append('file', selectedLogoFile);
-    //         try {
-    //             const response = await axios.post('/api/admin/upload', formData, {
-    //                 headers: { 'Content-Type': 'multipart/form-data' },
-    //             });
-    //             const logoUrl = response.data.fileUrl;
-    //             setLogoPreview(logoUrl);
-    //             localStorage.setItem('logoUrl', logoUrl);
-    //             alert('로고가 성공적으로 변경되었습니다.');
-    //         } catch (error) {
-    //             console.error('로고 업로드 실패:', error);
-    //             alert('로고 업로드에 실패했습니다.');
-    //         }
-    //     }
-    // };
-
-    const handleLogoUpload = async () => {
-        if (selectedLogoFile) {
-            const formData = new FormData();
-            formData.append('file', selectedLogoFile);
-            try {
-                const response = await axios.post('/api/admin/upload', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' },
-                });
-                const logoUrl = response.data.fileUrl;
-                setLogoPreview(logoUrl);
-                localStorage.setItem('logoUrl', logoUrl); // S3 URL 저장
-                alert('로고가 성공적으로 변경되었습니다.');
-            } catch (error) {
-                console.error('로고 업로드 실패:', error);
-                alert('로고 업로드에 실패했습니다.');
-            }
-        }
-    };
-
-    const handleDeleteLogo = () => {
-        setLogoPreview(null);
-        setSelectedLogoFile(null);
-        localStorage.removeItem('logoUrl');
-        alert('로고가 삭제되었습니다.');
     };
 
     const handleFaviconChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,30 +43,48 @@ const DesignSettings: React.FC = () => {
         }
     };
 
-    const handleFaviconUpload = async () => {
-        if (selectedFaviconFile) {
+    const handleFileUpload = async (file: File | null, category: string) => {
+        if (file) {
             const formData = new FormData();
-            formData.append('file', selectedFaviconFile);
+            formData.append('file', file);
+            formData.append('category', category);
+
             try {
-                const response = await axios.post('/api/admin/upload', formData, {
+                const response = await apiClient.post(`/api/admin/upload/${category}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
-                const faviconUrl = response.data.fileUrl;
-                setFaviconPreview(faviconUrl);
-                localStorage.setItem('faviconUrl', faviconUrl); // S3 URL 저장
-                alert('파비콘이 성공적으로 변경되었습니다.');
+                const fileUrl = response.data.fileUrl;
+
+                if (category === 'logo') {
+                    setLogoPreview(fileUrl);
+                } else if (category === 'favicon') {
+                    setFaviconPreview(fileUrl);
+                }
+
+                alert(`${category === 'logo' ? '로고' : '파비콘'}가 성공적으로 업로드되었습니다.`);
             } catch (error) {
-                console.error('파비콘 업로드 실패:', error);
-                alert('파비콘 업로드에 실패했습니다.');
+                console.error(`${category === 'logo' ? '로고' : '파비콘'} 업로드 실패:`, error);
+                alert(`${category === 'logo' ? '로고' : '파비콘'} 업로드에 실패했습니다.`);
             }
         }
     };
 
-    const handleDeleteFavicon = () => {
-        setFaviconPreview(null);
-        setSelectedFaviconFile(null);
-        localStorage.removeItem('faviconUrl');
-        alert('파비콘이 삭제되었습니다.');
+    const handleDeleteFile = async (category: string) => {
+        try {
+            await apiClient.delete(`/api/admin/files/${category}`); // 경로에 category를 직접 포함
+
+            if (category === 'logo') {
+                setLogoPreview(null);
+                setSelectedLogoFile(null);
+            } else if (category === 'favicon') {
+                setFaviconPreview(null);
+                setSelectedFaviconFile(null);
+            }
+
+            alert(`${category === 'logo' ? '로고' : '파비콘'}가 삭제되었습니다.`);
+        } catch (error) {
+            console.error(`${category === 'logo' ? '로고' : '파비콘'} 삭제 실패:`, error);
+        }
     };
 
     return (
@@ -110,10 +99,16 @@ const DesignSettings: React.FC = () => {
                 )}
                 <input type="file" onChange={handleLogoChange} />
                 <div className={styles.buttonGroup}>
-                    <button onClick={handleLogoUpload} disabled={!selectedLogoFile} className={styles.button}>
+                    <button
+                        onClick={() => handleFileUpload(selectedLogoFile, 'logo')}
+                        disabled={!selectedLogoFile}
+                        className={styles.button}>
                         로고 업로드
                     </button>
-                    <button onClick={handleDeleteLogo} disabled={!logoPreview} className={styles.deleteButton}>
+                    <button
+                        onClick={() => handleDeleteFile('logo')}
+                        disabled={!logoPreview}
+                        className={styles.deleteButton}>
                         로고 삭제
                     </button>
                 </div>
@@ -129,10 +124,16 @@ const DesignSettings: React.FC = () => {
                 )}
                 <input type="file" onChange={handleFaviconChange} />
                 <div className={styles.buttonGroup}>
-                    <button onClick={handleFaviconUpload} disabled={!selectedFaviconFile} className={styles.button}>
+                    <button
+                        onClick={() => handleFileUpload(selectedFaviconFile, 'favicon')}
+                        disabled={!selectedFaviconFile}
+                        className={styles.button}>
                         파비콘 업로드
                     </button>
-                    <button onClick={handleDeleteFavicon} disabled={!faviconPreview} className={styles.deleteButton}>
+                    <button
+                        onClick={() => handleDeleteFile('favicon')}
+                        disabled={!faviconPreview}
+                        className={styles.deleteButton}>
                         파비콘 삭제
                     </button>
                 </div>

@@ -10,17 +10,19 @@ const BannerSettings: React.FC = () => {
     const [isUploading, setIsUploading] = useState<boolean>(false);
 
     // S3에서 배너 URL을 가져오는 함수
-    const fetchBanners = async () => {
-        try {
-            const response = await apiClient.get(`/api/admin/getBanners`, {
-                params: { category: 'banner_shop', index: selectedBannerIndex },
-            });
-            setBannerPreviews(response.data.banner || ''); // 최신 이미지 미리보기 설정
-        } catch (error) {
-            console.error('배너 가져오기 실패:', error);
-            setBannerPreviews('');
-        }
-    };
+
+   const fetchBanners = async () => {
+       try {
+           const response = await apiClient.get('/api/admin/getBanners', {
+               params: { category: selectedCategory, index: selectedBannerIndex },
+           });
+           setBannerPreviews(response.data.banner || '/default_banner.png'); // 기본 배너 설정
+       } catch (error) {
+           console.error('Failed to fetch banner:', error);
+           setBannerPreviews('/default_banner.png'); // 오류 시 기본 이미지로 설정
+       }
+   };
+
 
     useEffect(() => {
         fetchBanners();
@@ -50,7 +52,8 @@ const BannerSettings: React.FC = () => {
             formData.append('index', String(selectedBannerIndex));
 
             try {
-                await apiClient.post('/api/admin/upload', formData, {
+                // 요청 경로를 '/api/admin/upload/banner'로 설정
+                await apiClient.post('/api/admin/upload/banner', formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 });
 
@@ -64,6 +67,7 @@ const BannerSettings: React.FC = () => {
             }
         }
     };
+
 
     return (
         <div className={styles.container}>

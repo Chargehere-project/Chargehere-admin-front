@@ -106,16 +106,23 @@ const QnATable: React.FC = () => {
 
     const handleOpenModal = async (qna: any) => {
         setSelectedQnA(qna);
-        try {
-            const response = await apiClient.get(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas/${qna.QnAID}/replies`
-            );
-            if (response.data.reply) {
-                setReplyContent(response.data.reply.ReplyContent);
+
+        // 답변 상태가 'Answered'인 경우에만 기존 답변 불러오기
+        if (qna.Status === 'Answered') {
+            try {
+                const response = await apiClient.get(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/qnas/${qna.QnAID}/replies`
+                );
+                if (response.data.reply) {
+                    setReplyContent(response.data.reply.ReplyContent);
+                }
+            } catch (error) {
+                console.error('기존 답변 불러오기 실패:', error);
             }
-        } catch (error) {
-            console.error('기존 답변 불러오기 실패:', error);
+        } else {
+            setReplyContent(''); // Pending 상태에서는 답변 내용 비우기
         }
+
         setIsModalOpen(true);
     };
 
@@ -290,7 +297,12 @@ const QnATable: React.FC = () => {
                         </button>
                     </div>
 
-                    <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="답변하기">
+                    <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="답변하기"  style={{
+                                content: {
+                                    width: '600px',
+                                    margin: 'auto',
+                                },
+                            }}>
                         <h2 style={{ textAlign: 'center', margin: '10px 0', marginBottom: '20px' }}>QnA 답변</h2>
 
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
