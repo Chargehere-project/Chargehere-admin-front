@@ -69,7 +69,7 @@ const ReviewTable: React.FC = () => {
             console.log('Fetched reviews response:', response.data); // 디버깅용
             setReviews(response.data.reviews);
             setTotalPages(response.data.totalPages);
-            setTotalReviews(response.data.totalReviews); // 전체 리뷰 개수 설정
+            setTotalReviews(response.data.totalReviews || response.data.reviews.length); // 전체 리뷰 개수 설정
         } catch (error) {
             console.error('리뷰 목록 가져오기 실패:', error);
         } finally {
@@ -77,13 +77,21 @@ const ReviewTable: React.FC = () => {
         }
     };
 
-    const handleSearch = (searchParams: any) => {
+
+    useEffect(() => {
+        fetchReviews(currentPage, searchParams);
+    }, [currentPage, searchParams]);
+
+
+    const handleSearch = (newSearchParams: any) => {
         setCurrentPage(1);
-        fetchReviews(1, searchParams);
+        setSearchParams(newSearchParams); // searchParams 상태 업데이트
+        fetchReviews(1, newSearchParams); // 검색 결과로 첫 페이지를 로드
     };
 
     const handleReset = () => {
         setCurrentPage(1);
+        setSearchParams(null); // searchParams를 초기화하여 전체 리스트로 전환
         fetchReviews();
     };
 
@@ -107,6 +115,7 @@ const ReviewTable: React.FC = () => {
     const handlePageChange = (page: number) => {
         if (page < 1 || page > totalPages) return;
         setCurrentPage(page);
+        fetchReviews(page, searchParams); // searchParams 전달
     };
 
     const renderPaginationButtons = () => {
@@ -129,6 +138,8 @@ const ReviewTable: React.FC = () => {
                 pages.push(currentPage - 2, currentPage - 1, currentPage, currentPage + 1, currentPage + 2);
             }
         }
+
+        
 
         return pages.map((page) => (
             <button
@@ -285,10 +296,11 @@ const ReviewTable: React.FC = () => {
                                                 : review.Content}
                                         </td>
                                         <td>
-                                            {moment(review.ReviewDate)
+                                            {moment(review.CreatedAt)
                                                 .tz('Asia/Seoul')
                                                 .format('YYYY. MM. DD. A hh:mm:ss')}
                                         </td>
+
                                         <td>
                                             {review.Image && (
                                                 <img
@@ -376,12 +388,19 @@ const ReviewTable: React.FC = () => {
                     </div>
 
                     {/* 리뷰 수정 모달 */}
-                    {/* 리뷰 수정 모달 */}
                     <Modal
+                    
                         isOpen={isEditModalOpen}
                         onRequestClose={closeEditModal}
                         ariaHideApp={false} // 필요 시 설정, SSR 앱에서는 false로 설정하는 경우가 있음
                         contentLabel="Edit Review Modal" // 접근성을 위한 레이블
+                         style={{
+                                content: {
+                                    width: '600px',
+                                    margin: 'auto',
+                                },
+                            }}
+                        
                     >
                         <h2 style={{ textAlign: 'center', marginBottom: '20px' }}>리뷰 수정</h2>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -444,7 +463,7 @@ const ReviewTable: React.FC = () => {
                                     type="text"
                                     value={
                                         selectedReview
-                                            ? moment(selectedReview.ReviewDate)
+                                            ? moment(selectedReview.CreatedAt)
                                                   .tz('Asia/Seoul')
                                                   .format('YYYY. MM. DD. A hh:mm:ss')
                                             : ''
