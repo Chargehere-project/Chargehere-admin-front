@@ -1,32 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import dynamic from 'next/dynamic';
 import Modal from 'react-modal';
 import { MdEdit, MdDelete } from 'react-icons/md';
 import { IoChevronBackOutline, IoChevronForwardOutline } from 'react-icons/io5';
-import { AiOutlineClose } from 'react-icons/ai';
+import { AiOutlineClose } from 'react-icons/ai'; // close 버튼 아이콘
 import moment from 'moment-timezone';
+import 'react-quill/dist/quill.snow.css';
 import styles from '@/styles/admin/ProductManagement.module.css';
 import ProductSearch from './ProductSearch';
 import apiClient from '@/utils/apiClient';
-import { Editor } from '@tinymce/tinymce-react';
-import { MyUploadAdapter } from '@/utils/MyUploadAdapter';
 
-const ITEMS_PER_PAGE = 5;
-
-const handleImageUpload = async (file: File): Promise<string | null> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-        const response = await apiClient.post('/api/admin/upload-image', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        return response.data.fileUrl;
-    } catch (error) {
-        console.error('이미지 업로드 실패:', error);
-        return null;
-    }
-};
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+const ITEMS_PER_PAGE = 5; // 한 페이지에 보여줄 항목 수
 
 const ProductTable: React.FC = () => {
     const [products, setProducts] = useState([]);
@@ -47,31 +33,6 @@ const ProductTable: React.FC = () => {
     const [searchParams, setSearchParams] = useState({});
     const [totalCount, setTotalCount] = useState(0);
 
-    const customUploadAdapter = useCallback((loader) => {
-        return new MyUploadAdapter(loader, handleImageUpload);
-    }, []);
-
-    // useEffect(() => {
-    //     import('@tinymce/tinymce-react')
-    //         .then((EditorModule) => {
-    //             setEditor(EditorModule.Editor);
-    //         })
-    //         .catch((error) => {
-    //             console.error('TinyMCE 로드 중 오류:', error);
-    //         });
-    // }, []);
-
-    // if (!editor) {
-    //     return <div>로딩 중...</div>;
-    // }
-
-    const handleDescriptionChange = (content: string) => {
-        setNewProduct((prevProduct) => ({
-            ...prevProduct,
-            description: content,
-        }));
-    };
-
     const fetchProducts = async (page = 1) => {
         const params = {
             page,
@@ -81,51 +42,49 @@ const ProductTable: React.FC = () => {
             ...(searchParams || {}),
         };
 
+        console.log('Fetching products with params:', params); // 디버깅용 로그
+
         try {
-            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, {
-                params,
-                withCredentials: true,
-            });
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, { params });
+            console.log('백엔드에서 받아온 데이터:', response.data.products); // 백엔드 응답 확인
 
             setProducts(response.data.products);
             setTotalPages(response.data.totalPages);
             setCurrentPage(page);
-            setTotalCount(response.data.totalCount);
+
+            // totalCount를 추가하여 상태 업데이트
+            setTotalCount(response.data.totalCount); // 전체 상품 수 상태 업데이트
+
+            console.log('Product state after setting:', products); // 상태가 업데이트되었는지 확인
         } catch (error) {
             console.error('상품 목록 가져오기 실패:', error);
         }
     };
 
     useEffect(() => {
+        // 검색 조건이 없을 때만 fetchProducts 호출
         if (!searchParams || Object.keys(searchParams).length === 0) {
             fetchProducts(1);
         }
-    }, [searchParams]);
+    }, [searchParams]); // 검색 조건이 변경될 때만 fetchProducts 호출
 
     const handleSearch = (data, params) => {
+        console.log('handleSearch 호출 - 검색 결과:', data);
+        console.log('handleSearch 호출 - 검색 조건:', params);
         setProducts(data.products || []);
         setTotalPages(data.totalPages || 1);
         setCurrentPage(1);
         setSearchParams(params);
     };
 
-    const handleImageUpload = async (file: File): Promise<string | null> => {
-        const formData = new FormData();
-        formData.append('file', file);
-        try {
-            const response = await apiClient.post('/api/admin/upload-image', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' },
-            });
-            return response.data.fileUrl;
-        } catch (error) {
-            console.error('이미지 업로드 실패:', error);
-            return null;
-        }
-    };
+    useEffect(() => {
+        console.log('products 상태 변경으로 인해 리렌더링 발생:', products); // 상태 변경 확인
+    }, [products]);
 
+    // 검색 초기화 핸들러
     const handleReset = () => {
-        setSearchParams({});
-        fetchProducts(1);
+        setSearchParams({}); // 검색 조건을 초기화
+        fetchProducts(1); // 첫 페이지로 돌아가기
     };
 
     const handlePageChange = (page: number) => {
@@ -135,23 +94,26 @@ const ProductTable: React.FC = () => {
 
     const renderPaginationButtons = () => {
         const pages = [];
-        const totalDisplayedPages = 5;
+        const totalDisplayedPages = 5; // 총 보일 페이지 수
 
+        // 페이지 번호를 계산합니다.
         let startPage, endPage;
 
         if (totalPages <= totalDisplayedPages) {
+            // 총 페이지가 5페이지 이하일 경우
             startPage = 1;
             endPage = totalPages;
         } else {
+            // 총 페이지가 5페이지를 초과하는 경우
             if (currentPage <= 3) {
                 startPage = 1;
-                endPage = totalDisplayedPages;
+                endPage = totalDisplayedPages; // 1~5 페이지
             } else if (currentPage + 2 >= totalPages) {
-                startPage = totalPages - totalDisplayedPages + 1;
+                startPage = totalPages - totalDisplayedPages + 1; // 마지막 5페이지
                 endPage = totalPages;
             } else {
-                startPage = currentPage - 2;
-                endPage = currentPage + 2;
+                startPage = currentPage - 2; // 현재 페이지 기준으로 2페이지 앞
+                endPage = currentPage + 2; // 현재 페이지 기준으로 2페이지 뒤
             }
         }
 
@@ -184,10 +146,11 @@ const ProductTable: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append('name', newProduct.name);
-            formData.append('price', newProduct.price.toString());
-            formData.append('discountRate', newProduct.discountRate.toString());
+            formData.append('price', newProduct.price.toString()); // 숫자를 문자열로 변환
+            formData.append('discountRate', newProduct.discountRate.toString()); // 숫자를 문자열로 변환
             formData.append('description', newProduct.description);
             formData.append('status', newProduct.status);
+
             if (newProduct.thumbnail) {
                 formData.append('thumbnail', newProduct.thumbnail);
             }
@@ -195,14 +158,11 @@ const ProductTable: React.FC = () => {
             if (isEditing && selectedProduct) {
                 await apiClient.put(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${selectedProduct.ProductID}`,
-                    formData,
-                    { withCredentials: true }
+                    formData
                 );
                 alert('상품이 수정되었습니다.');
             } else {
-                await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, formData, {
-                    withCredentials: true,
-                });
+                await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, formData);
                 alert('상품이 등록되었습니다.');
             }
             fetchProducts();
@@ -213,9 +173,10 @@ const ProductTable: React.FC = () => {
         }
     };
 
+
     const openAddModal = () => {
         setIsEditing(false);
-        setSelectedProduct(null);
+        setSelectedProduct(null); // 선택된 상품을 초기화
         setNewProduct({
             name: '',
             price: 0,
@@ -228,6 +189,7 @@ const ProductTable: React.FC = () => {
         setIsModalOpen(true);
     };
 
+    // 이미지가 없을 때는 기본 이미지 경로를 사용하고, 있을 때는 해당 S3 URL을 사용합니다.
     const openEditModal = (product) => {
         setIsEditing(true);
         setSelectedProduct(product);
@@ -236,7 +198,8 @@ const ProductTable: React.FC = () => {
             price: product.Price,
             discountRate: product.Discount,
             thumbnail: null,
-            thumbnailPreview: product.Image ? `${process.env.NEXT_PUBLIC_API_URL}${product.Image}` : '',
+            // 이미지 URL이 없다면 로컬 파일을 사용할 수 있지만, 기본 URL을 설정해줍니다.
+            thumbnailPreview: product.Image ? `${product.Image}` : '', // S3 URL 사용, 로컬주소 제거
             description: product.DetailInfo,
             status: product.Status,
         });
@@ -256,54 +219,46 @@ const ProductTable: React.FC = () => {
     };
 
     const removeThumbnailPreview = async () => {
-        if (isEditing && selectedProduct && selectedProduct.Image) {
+        // 수정 모드에서만 URL 제거
+        if (isEditing && selectedProduct) {
             try {
-                await apiClient.delete(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${selectedProduct.ProductID}/thumbnail`,
-                    {
-                        withCredentials: true,
-                    }
+                // 이미지 URL이 존재하는 경우 DB에서 URL만 제거
+                await apiClient.put(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${selectedProduct.ProductID}/remove-image`
                 );
-                console.log('서버에서 이미지가 삭제되었습니다.');
+                console.log('이미지 URL이 DB에서 제거되었습니다.');
             } catch (error) {
-                console.error('이미지 삭제 실패:', error);
-                alert('이미지 삭제에 실패했습니다.');
+                console.error('이미지 URL 제거 실패:', error);
+                alert('이미지 URL 제거에 실패했습니다.');
             }
         }
 
-        setNewProduct((prev) => ({ ...prev, thumbnail: null, thumbnailPreview: '' }));
+        // 미리보기 이미지 초기화
+        setNewProduct((prev) => ({ ...prev, thumbnailPreview: '' }));
     };
 
     const handleDeleteProduct = async (productId) => {
-        try {
-            await apiClient.put(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`,
-                {
+        const confirmDelete = window.confirm('정말로 이 상품을 삭제하시겠습니까?'); // 첫 번째 확인
+
+        if (confirmDelete) {
+            try {
+                await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`, {
                     status: 'deleted',
-                },
-                {
-                    withCredentials: true,
-                }
-            );
-            fetchProducts();
-        } catch (error) {
-            console.error('상품 삭제 실패:', error);
-            alert('상품 삭제에 실패했습니다.');
+                });
+                fetchProducts(); // 상품 목록 새로고침
+            } catch (error) {
+                console.error('상품 삭제 실패:', error);
+                alert('상품 삭제에 실패했습니다.');
+            }
         }
     };
 
     const toggleProductStatus = async (productId, currentStatus) => {
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
         try {
-            await apiClient.put(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`,
-                {
-                    status: newStatus,
-                },
-                {
-                    withCredentials: true,
-                }
-            );
+            await apiClient.put(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}/status`, {
+                status: newStatus,
+            });
             fetchProducts();
         } catch (error) {
             console.error('상태 변경 실패:', error);
@@ -317,17 +272,49 @@ const ProductTable: React.FC = () => {
         setNewProduct((prev) => ({ ...prev, thumbnailPreview: '' }));
     };
 
+    const modules = {
+        toolbar: [
+            [{ header: '1' }, { header: '2' }, { font: [] }],
+            [{ size: [] }],
+            ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+            [{ list: 'ordered' }, { list: 'bullet' }, { indent: '-1' }, { indent: '+1' }],
+            ['link', 'image', 'video'],
+            ['clean'],
+        ],
+        clipboard: {
+            matchVisual: false,
+        },
+    };
+
+    const formats = [
+        'header',
+        'font',
+        'size',
+        'bold',
+        'italic',
+        'underline',
+        'strike',
+        'blockquote',
+        'list',
+        'bullet',
+        'indent',
+        'link',
+        'image',
+        'video',
+    ];
+
     return (
         <div className={styles.container}>
+            {/* ProductSearch 컴포넌트 추가 */}
             <ProductSearch onSearch={handleSearch} onReset={handleReset} />
             <table className={styles.table}>
                 <thead>
                     <tr>
-                        <th>No.</th>
+                        <th>No.</th> {/* No. 열 추가 */}
                         <th>상품아이디</th>
                         <th>카테고리</th>
                         <th>상품이름</th>
-                        <th>이미지</th>
+                        <th>이미지</th> {/* 이미지 열 추가 */}
                         <th>가격</th>
                         <th>할인율</th>
                         <th>상태</th>
@@ -337,56 +324,62 @@ const ProductTable: React.FC = () => {
                 </thead>
                 <tbody>
                     {products && products.length > 0 ? (
-                        products.map((product, index) => (
-                            <tr key={product.ProductID}>
-                                <td>{totalCount - (currentPage - 1) * ITEMS_PER_PAGE - index}</td>
-                                <td>{product.ProductID}</td>
-                                <td>{product.CategoryID}</td>
-                                <td>{product.ProductName}</td>
-                                <td>
-                                    {product.Image ? (
-                                        <img
-                                            src={product.Image}
-                                            alt={product.ProductName}
-                                            style={{ width: '150px', height: '60px' }}
+                        products.map((product, index) => {
+                            console.log('Rendering product:', product); // 제품이 올바르게 렌더링되는지 확인
+                            return (
+                                <tr key={product.ProductID}>
+                                    <td>{totalCount - (currentPage - 1) * ITEMS_PER_PAGE - index}</td> {/* No. 계산 */}
+                                    <td>{product.ProductID}</td>
+                                    <td>{product.CategoryID}</td>
+                                    <td>{product.ProductName}</td>
+                                    <td>
+                                        {product.Image ? (
+                                            <img
+                                                src={product.Image}
+                                                alt={product.ProductName}
+                                                style={{ width: '150px', height: '60px' }} // 이미지 미리보기
+                                            />
+                                        ) : (
+                                            '미리보기 없음'
+                                        )}
+                                    </td>
+                                    <td>{product.Price}</td>
+                                    <td>{product.Discount}%</td>
+                                    <td>
+                                        {product.Status === 'deleted' ? (
+                                            <span style={{ color: 'red' }}>삭제됨</span>
+                                        ) : (
+                                            <button
+                                                onClick={() => toggleProductStatus(product.ProductID, product.Status)}
+                                                style={{
+                                                    backgroundColor:
+                                                        product.Status === 'active' ? '#28a745' : '#6c757d',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '5px 10px',
+                                                    borderRadius: '4px',
+                                                    cursor: 'pointer',
+                                                }}>
+                                                {product.Status === 'active' ? '활성' : '비활성'}
+                                            </button>
+                                        )}
+                                    </td>
+                                    <td>
+                                        {moment(product.createdAt).tz('Asia/Seoul').format('YYYY. MM. DD. A hh:mm:ss')}
+                                    </td>
+                                    <td>
+                                        <MdEdit
+                                            onClick={() => openEditModal(product)}
+                                            style={{ cursor: 'pointer', marginRight: '10px' }}
                                         />
-                                    ) : (
-                                        '미리보기 없음'
-                                    )}
-                                </td>
-                                <td>{product.Price}</td>
-                                <td>{product.Discount}%</td>
-                                <td>
-                                    {product.Status === 'deleted' ? (
-                                        <span style={{ color: 'red' }}>삭제됨</span>
-                                    ) : (
-                                        <button
-                                            onClick={() => toggleProductStatus(product.ProductID, product.Status)}
-                                            style={{
-                                                backgroundColor: product.Status === 'active' ? '#28a745' : '#6c757d',
-                                                color: 'white',
-                                                border: 'none',
-                                                padding: '5px 10px',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                            }}>
-                                            {product.Status === 'active' ? '활성' : '비활성'}
-                                        </button>
-                                    )}
-                                </td>
-                                <td>{moment(product.createdAt).tz('Asia/Seoul').format('YYYY. MM. DD. A hh:mm:ss')}</td>
-                                <td>
-                                    <MdEdit
-                                        onClick={() => openEditModal(product)}
-                                        style={{ cursor: 'pointer', marginRight: '10px' }}
-                                    />
-                                    <MdDelete
-                                        onClick={() => handleDeleteProduct(product.ProductID)}
-                                        style={{ cursor: 'pointer' }}
-                                    />
-                                </td>
-                            </tr>
-                        ))
+                                        <MdDelete
+                                            onClick={() => handleDeleteProduct(product.ProductID)}
+                                            style={{ cursor: 'pointer' }}
+                                        />
+                                    </td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr>
                             <td colSpan={10} style={{ textAlign: 'center' }}>
@@ -501,7 +494,7 @@ const ProductTable: React.FC = () => {
                         {newProduct.thumbnailPreview && (
                             <div style={{ position: 'relative', marginTop: '10px' }}>
                                 <img
-                                    src={newProduct.thumbnailPreview}
+                                    src={newProduct.thumbnailPreview} // 여기서 새로운 이미지를 미리보기로 설정
                                     alt="미리보기"
                                     style={{ width: '100%', height: 'auto' }}
                                 />
@@ -519,23 +512,16 @@ const ProductTable: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <div style={{ marginBottom: '15px', width: '70%' }}>
-                            <label>상세내용:</label>
-                            <Editor
-                                apiKey="your-tinymce-api-key" // TinyMCE API 키를 사용합니다.
-                                value={newProduct.description}
-                                init={{
-                                    height: 500,
-                                    menubar: true,
-                                    plugins: ['image', 'link', 'lists', 'media'],
-                                    toolbar:
-                                        'undo redo | formatselect | bold italic | alignleft aligncenter alignright | image | link | bullist numlist',
-                                    images_upload_url: '/api/upload', // 이미지 업로드 URL 설정
-                                }}
-                                onEditorChange={handleDescriptionChange}
-                            />
-                        </div>
+                    <div style={{ marginBottom: '15px', width: '70%' }}>
+                        <label>상세내용:</label>
+                        <ReactQuill
+                            modules={modules}
+                            formats={formats}
+                            theme="snow"
+                            value={newProduct.description}
+                            onChange={(value) => setNewProduct({ ...newProduct, description: value })}
+                            style={{ height: '200px', marginBottom: '100px' }}
+                        />
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
