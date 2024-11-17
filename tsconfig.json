@@ -1,44 +1,27 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
-    "allowJs": true,
-    "skipLibCheck": true,
-    "strict": false,
-    "noEmit": true,
-    "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "baseUrl": "src",
-    "paths": {
-      "@/models/*": [
-        "models/*"
-      ],
-      "@/styles/*": [
-        "styles/*"
-      ], // styles 폴더에 대한 절대 경로 설정
-      "@/components/*": [
-        "components/*"
-      ], // components 폴더에 대한 절대 경로 설정 (필요시)
-      "@/*": [
-        "./*"
-      ] // 루트 기준으로 설정
+    "compilerOptions": {
+        "lib": ["dom", "dom.iterable", "esnext"],
+        "allowJs": true,
+        "skipLibCheck": true,
+        "strict": false,
+        "noEmit": true,
+        "esModuleInterop": true,
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "jsx": "preserve",
+        "incremental": true,
+        "baseUrl": "src",
+        "paths": {
+            "@/models/*": ["models/*"],
+            "@/styles/*": ["styles/*"],
+            "@/components/*": ["components/*"],
+            "@/*": ["./*"]
+        },
+        "target": "ES2017",
+        "typeRoots": ["node_modules/@types"] // 이 부분 추가
     },
-    "target": "ES2017"
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+    "exclude": ["node_modules"]
 }

@@ -11,7 +11,9 @@ import styles from '@/styles/admin/ProductManagement.module.css';
 import ProductSearch from './ProductSearch';
 import apiClient from '@/utils/apiClient';
 
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+const ReactQuill = dynamic(() => import('react-quill') as Promise<{ default: React.ComponentType<any> }>, {
+    ssr: false,
+});
 const ITEMS_PER_PAGE = 5; // 한 페이지에 보여줄 항목 수
 
 const ProductTable: React.FC = () => {
