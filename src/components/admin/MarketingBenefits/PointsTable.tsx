@@ -386,7 +386,7 @@ const PointsTable: React.FC = () => {
             case 'Earned':
                 return { color: 'green', text: '적립' };
             case 'Used':
-                return { color: 'yellow', text: '사용' };
+                return { color: 'orange', text: '사용' };
             case 'Deducted':
                 return { color: 'red', text: '차감' };
             default:
@@ -429,16 +429,20 @@ const PointsTable: React.FC = () => {
                                                 style={{
                                                     color: 'white',
                                                     backgroundColor:
-                                                        point.ChargeType === 'Deducted' || point.isCancelled
-                                                            ? '#ccc'
-                                                            : '#dc3545', // Deducted이거나 취소된 경우 회색(#ccc), 그렇지 않으면 빨간색(#dc3545)
+                                                        point.ChargeType === 'Deducted' ||
+                                                        point.isCancelled ||
+                                                        point.ChargeType === 'Used'
+                                                            ? '#ccc' // Deducted, 취소된 경우, 또는 Used인 경우 회색(#ccc)
+                                                            : '#dc3545', // 그 외에는 빨간색(#dc3545)
                                                     padding: '5px 10px',
                                                     border: 'none',
                                                     borderRadius: '5px',
                                                     cursor:
-                                                        point.ChargeType === 'Deducted' || point.isCancelled
-                                                            ? 'not-allowed'
-                                                            : 'pointer', // 비활성화된 경우 'not-allowed' 커서
+                                                        point.ChargeType === 'Deducted' ||
+                                                        point.isCancelled ||
+                                                        point.ChargeType === 'Used'
+                                                            ? 'not-allowed' // 비활성화된 경우 'not-allowed' 커서
+                                                            : 'pointer', // 활성화된 경우 클릭 가능한 커서
                                                 }}
                                                 onClick={() =>
                                                     handleCancelPoint(
@@ -447,7 +451,11 @@ const PointsTable: React.FC = () => {
                                                         point.Amount
                                                     )
                                                 }
-                                                disabled={point.ChargeType === 'Deducted' || point.isCancelled}>
+                                                disabled={
+                                                    point.ChargeType === 'Deducted' ||
+                                                    point.isCancelled ||
+                                                    point.ChargeType === 'Used'
+                                                }>
                                                 취소
                                             </button>
                                         </td>
