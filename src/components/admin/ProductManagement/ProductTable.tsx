@@ -11,9 +11,7 @@ import styles from '@/styles/admin/ProductManagement.module.css';
 import ProductSearch from './ProductSearch';
 import apiClient from '@/utils/apiClient';
 
-const ReactQuill = dynamic(() => import('react-quill') as Promise<{ default: React.ComponentType<any> }>, {
-    ssr: false,
-});
+const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 const ITEMS_PER_PAGE = 5; // 한 페이지에 보여줄 항목 수
 
 const ProductTable: React.FC = () => {
@@ -148,9 +146,9 @@ const ProductTable: React.FC = () => {
         try {
             const formData = new FormData();
             formData.append('name', newProduct.name);
-            formData.append('price', newProduct.price.toString()); // 숫자를 문자열로 변환
-            formData.append('discountRate', newProduct.discountRate.toString()); // 숫자를 문자열로 변환
-            formData.append('description', newProduct.description);
+            formData.append('price', newProduct.price.toString());
+            formData.append('discountRate', newProduct.discountRate.toString());
+            formData.append('description', newProduct.description); // HTML 데이터 전송
             formData.append('status', newProduct.status);
 
             if (newProduct.thumbnail) {
@@ -167,6 +165,7 @@ const ProductTable: React.FC = () => {
                 await apiClient.post(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, formData);
                 alert('상품이 등록되었습니다.');
             }
+
             fetchProducts();
             closeModal();
         } catch (error) {
@@ -192,22 +191,56 @@ const ProductTable: React.FC = () => {
     };
 
     // 이미지가 없을 때는 기본 이미지 경로를 사용하고, 있을 때는 해당 S3 URL을 사용합니다.
-    const openEditModal = (product) => {
+    const openEditModal = async (product) => {
         setIsEditing(true);
         setSelectedProduct(product);
-        setNewProduct({
-            name: product.ProductName,
-            price: product.Price,
-            discountRate: product.Discount,
-            thumbnail: null,
-            // 이미지 URL이 없다면 로컬 파일을 사용할 수 있지만, 기본 URL을 설정해줍니다.
-            thumbnailPreview: product.Image ? `${product.Image}` : '', // S3 URL 사용, 로컬주소 제거
-            description: product.DetailInfo,
-            status: product.Status,
-        });
+
+        try {
+            // 상세 내용 (HTML) 가져오기
+            const htmlResponse = await fetch(product.DetailInfo); // S3 URL에서 HTML 파일 가져오기
+            const htmlContent = await htmlResponse.text();
+
+            setNewProduct({
+                name: product.ProductName,
+                price: product.Price,
+                discountRate: product.Discount,
+                thumbnail: null,
+                thumbnailPreview: product.Image,
+                description: htmlContent, // HTML 내용을 에디터에 로드
+                status: product.Status,
+            });
+        } catch (error) {
+            console.error('상세 내용 로드 실패:', error);
+            alert('상세 내용을 로드하는 데 실패했습니다.');
+        }
 
         setIsModalOpen(true);
     };
+
+    const fetchProductDetails = async (productId) => {
+        try {
+            const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${productId}`);
+            const product = response.data;
+
+            // S3에 저장된 HTML 파일 로드
+            const htmlResponse = await fetch(product.DetailInfo);
+            const htmlContent = await htmlResponse.text();
+
+            setNewProduct({
+                name: product.ProductName,
+                price: product.Price,
+                discountRate: product.Discount,
+                thumbnail: null, // 기본값 추가
+                thumbnailPreview: product.Image || '', // 이미지 URL 또는 빈 문자열
+                description: htmlContent, // HTML 내용
+                status: product.Status,
+            });
+
+        } catch (error) {
+            console.error('상품 상세 정보 가져오기 실패:', error);
+        }
+    };
+
 
     const handleThumbnailChange = (e) => {
         const file = e.target.files[0];
