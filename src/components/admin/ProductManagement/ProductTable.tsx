@@ -42,11 +42,9 @@ const ProductTable: React.FC = () => {
             ...(searchParams || {}),
         };
 
-        console.log('Fetching products with params:', params); // 디버깅용 로그
 
         try {
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products`, { params });
-            console.log('백엔드에서 받아온 데이터:', response.data.products); // 백엔드 응답 확인
 
             setProducts(response.data.products);
             setTotalPages(response.data.totalPages);
@@ -55,7 +53,6 @@ const ProductTable: React.FC = () => {
             // totalCount를 추가하여 상태 업데이트
             setTotalCount(response.data.totalCount); // 전체 상품 수 상태 업데이트
 
-            console.log('Product state after setting:', products); // 상태가 업데이트되었는지 확인
         } catch (error) {
             console.error('상품 목록 가져오기 실패:', error);
         }
@@ -69,8 +66,6 @@ const ProductTable: React.FC = () => {
     }, [searchParams]); // 검색 조건이 변경될 때만 fetchProducts 호출
 
     const handleSearch = (data, params) => {
-        console.log('handleSearch 호출 - 검색 결과:', data);
-        console.log('handleSearch 호출 - 검색 조건:', params);
         setProducts(data.products || []);
         setTotalPages(data.totalPages || 1);
         setCurrentPage(1);
@@ -78,7 +73,6 @@ const ProductTable: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log('products 상태 변경으로 인해 리렌더링 발생:', products); // 상태 변경 확인
     }, [products]);
 
     // 검색 초기화 핸들러
@@ -261,7 +255,6 @@ const ProductTable: React.FC = () => {
                 await apiClient.put(
                     `${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/${selectedProduct.ProductID}/remove-image`
                 );
-                console.log('이미지 URL이 DB에서 제거되었습니다.');
             } catch (error) {
                 console.error('이미지 URL 제거 실패:', error);
                 alert('이미지 URL 제거에 실패했습니다.');
@@ -360,7 +353,6 @@ const ProductTable: React.FC = () => {
                 <tbody>
                     {products && products.length > 0 ? (
                         products.map((product, index) => {
-                            console.log('Rendering product:', product); // 제품이 올바르게 렌더링되는지 확인
                             return (
                                 <tr key={product.ProductID}>
                                     <td>{totalCount - (currentPage - 1) * ITEMS_PER_PAGE - index}</td> {/* No. 계산 */}

@@ -39,7 +39,6 @@ const CouponSearch: React.FC<{
     };
 
     useEffect(() => {
-        console.log('Received coupon options in CouponSearch:', couponOptions); // 추가된 콘솔 로그
     }, [couponOptions]);
 
     return (

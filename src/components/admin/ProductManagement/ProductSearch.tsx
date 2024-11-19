@@ -28,7 +28,6 @@ const ProductSearch: React.FC<{ onSearch: (data: any, params: any) => void; onRe
             limit: ITEMS_PER_PAGE,
         };
 
-        console.log('검색 요청 파라미터:', params); // 상품 ID 및 기간 필터 확인용 로그
 
         try {
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/products/search`, {

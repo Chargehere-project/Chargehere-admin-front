@@ -100,7 +100,6 @@ const PointsTable: React.FC = () => {
 
     // 초기화 핸들러
     const handleReset = async () => {
-        console.log('초기화 버튼 클릭됨');
         setSearchParams(null); // 검색 조건 초기화
         setSelectAll(false); // 전체 선택 체크박스 해제
         setSelectedUsers([]); // 선택된 유저 목록 초기화
@@ -209,7 +208,6 @@ const PointsTable: React.FC = () => {
 
     // 유저 목록 가져오기 (검색 포함)
     const fetchUsers = async (query = '') => {
-        console.log('Fetching users with query:', query);
         try {
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
                 params: {
@@ -220,8 +218,6 @@ const PointsTable: React.FC = () => {
             });
 
             // 전체 응답 데이터 출력
-            console.log('Full response data:', response.data);
-            console.log('Fetched users:', response.data);
 
             setFilteredUsers(response.data || []); // 데이터가 없으면 빈 배열로 설정
             setUsers(response.data || []);
@@ -255,7 +251,6 @@ const PointsTable: React.FC = () => {
 
     // 유저 검색 핸들러
     const handleUserSearch = () => {
-        console.log('Search button clicked. Calling fetchUsers...');
         fetchUsers(userSearchQuery);
     };
 
@@ -336,7 +331,6 @@ const PointsTable: React.FC = () => {
     // 포인트 취소
     const handleCancelPoint = async (pointId, loginId, amount) => {
         try {
-            console.log('취소 요청 - pointId:', pointId, 'loginId:', loginId, 'amount:', amount);
 
             // 서버에 취소 요청 보내기
             const response = await apiClient.post(
@@ -352,7 +346,6 @@ const PointsTable: React.FC = () => {
                 }
             );
 
-            console.log('취소 응답 데이터:', response.data);
 
             if (response.data && response.data.newPoints) {
                 // pointsHistory 상태 업데이트: 취소 내역을 추가하고 기존 내역 수정

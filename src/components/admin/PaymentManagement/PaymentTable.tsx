@@ -49,7 +49,6 @@ const PaymentTable: React.FC = () => {
                 params: { page, limit: ITEMS_PER_PAGE, ...params }, // 검색 파라미터를 포함하여 전달
                 withCredentials: true,
             });
-            console.log(response.data.transactions); // 서버에서 받은 데이터를 출력하여 OrderList가 포함되어 있는지 확인
 
             setTransactions(response.data.transactions);
             setTotalTransactions(response.data.totalTransactions);
@@ -92,7 +91,6 @@ const PaymentTable: React.FC = () => {
     };
 
     const handleViewDetails = (transaction: Transaction) => {
-        console.log(transaction.OrderList); 
         setSelectedTransaction(transaction);
 
         // OrderList가 존재하면 OrderStatus를 설정, 아니면 기본값 'Pending'을 설정

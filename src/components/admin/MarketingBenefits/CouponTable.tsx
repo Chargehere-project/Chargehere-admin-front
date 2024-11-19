@@ -60,7 +60,6 @@ const CouponTable: React.FC = () => {
 
                 if (response.data.totalItems) {
                     setTotalCoupons(response.data.totalItems);
-                    console.log('Total Coupons:', response.data.totalItems);
                 } else {
                     console.warn('totalItems가 응답에 없습니다');
                 }
@@ -159,7 +158,6 @@ const CouponTable: React.FC = () => {
                 withCredentials: true, // 쿠키 포함 설정
             });
             setTotalUserCoupons(response.data.count);
-            console.log('Total User Coupons:', response.data.count);
         } catch (error) {
             console.error('UserCoupon 총 개수 가져오기 실패:', error);
         }
@@ -209,7 +207,6 @@ const CouponTable: React.FC = () => {
 
     // 유저 목록 가져오기 (검색 포함)
     const fetchUsers = async (query = '') => {
-        console.log('Fetching users with query:', query);
         try {
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/search`, {
                 params: {
@@ -220,8 +217,6 @@ const CouponTable: React.FC = () => {
             });
 
             // 전체 응답 데이터 출력
-            console.log('Full response data:', response.data);
-            console.log('Fetched users:', response.data);
 
             setFilteredUsers(response.data || []); // 데이터가 없으면 빈 배열로 설정
             setUsers(response.data || []);
@@ -257,16 +252,12 @@ const CouponTable: React.FC = () => {
                 expiry: coupon.ExpirationDate,
                 status: coupon.Status,
             });
-            console.log('Selected coupon in openModal:', coupon); // 추가된 콘솔 로그
         } else {
             setNewCoupon({ name: '', discountAmount: 0, startDate: '', expiry: '', status: 'active' });
             setSelectedCoupon(null); // 초기화
-            console.log('Coupon reset in openModal'); // 추가된 콘솔 로그
         }
         setIsModalOpen(true);
-        console.log('Modal type set to:', type); // 추가된 콘솔 로그
         if (type === 'list') {
-            console.log('Fetching coupon list for current page:', currentPage); // 추가된 로그
             fetchCouponList(currentPage);
         } else if (type === 'issue') {
             fetchCouponList();
@@ -320,7 +311,6 @@ const CouponTable: React.FC = () => {
 
     // 유저 검색 핸들러
     const handleUserSearch = () => {
-        console.log('Search button clicked. Calling fetchUsers...');
         fetchUsers(userSearchQuery);
     };
 
@@ -358,7 +348,6 @@ const CouponTable: React.FC = () => {
             const response = await apiClient.get(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/coupons`, {
                 withCredentials: true,
             });
-            console.log('Fetched coupon options:', response.data.coupons); // 추가된 콘솔 로그
             setCouponOptions(response.data.coupons || []);
         } catch (error) {
             console.error('쿠폰 옵션 가져오기 실패:', error);
@@ -459,7 +448,6 @@ const CouponTable: React.FC = () => {
         const selectedCouponId = event.target.value;
         const selected = couponList.find((c) => c.CouponID === parseInt(selectedCouponId));
         setSelectedCoupon(selected || null);
-        console.log('Selected coupon:', selected); // 추가된 콘솔 로그
     };
 
     // 개별 유저 선택 핸들러 수정

@@ -62,11 +62,9 @@ const ReviewTable: React.FC = () => {
                 ...searchParams,
             };
 
-            console.log('Fetching reviews with params:', params); // 디버깅용
 
             const response = await apiClient.get(url, { params });
 
-            console.log('Fetched reviews response:', response.data); // 디버깅용
             setReviews(response.data.reviews);
             setTotalPages(response.data.totalPages);
             setTotalReviews(response.data.totalReviews || response.data.reviews.length); // 전체 리뷰 개수 설정
@@ -96,14 +94,11 @@ const ReviewTable: React.FC = () => {
     };
 
     const handleDeleteReview = async (reviewId) => {
-        console.log(`Attempting to delete review with ID: ${reviewId}`);
         const confirmed = window.confirm('이 리뷰를 삭제하시겠습니까?');
         if (!confirmed) return;
 
         try {
-            console.log(`DELETE request URL: http://localhost:8000/api/admin/reviews/${reviewId}`);
             const response = await apiClient.delete(`http://localhost:8000/api/admin/reviews/${reviewId}`);
-            console.log('Delete response:', response);
             alert('리뷰가 삭제되었습니다.');
             fetchReviews(currentPage);
         } catch (error) {
@@ -178,7 +173,6 @@ const ReviewTable: React.FC = () => {
 
     const toggleReviewStatus = async (reviewId: number, currentStatus: string) => {
         const newStatus = currentStatus === 'visible' ? 'hidden' : 'visible';
-        console.log(`Attempting to update status for review ID: ${reviewId} to ${newStatus}`);
         try {
             const response = await apiClient.put(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/admin/reviews/${reviewId}/status`,
@@ -186,7 +180,6 @@ const ReviewTable: React.FC = () => {
                     status: newStatus,
                 }
             );
-            console.log('Status update response:', response.data);
 
             setReviews((prev) =>
                 prev.map((review) => (review.ReviewID === reviewId ? { ...review, Status: newStatus } : review))

@@ -50,7 +50,6 @@ const QnATable: React.FC = () => {
 
 
    const handleSearchResults = (searchParams) => {
-       console.log('Search parameters:', searchParams); // 검색 파라미터 로그
 
        // 조건이 없으면 전체 목록을 보여줌
        if (!searchParams.query && !searchParams.status && !searchParams.startDate && !searchParams.endDate) {

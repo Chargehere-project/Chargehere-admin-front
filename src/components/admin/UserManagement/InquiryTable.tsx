@@ -35,7 +35,6 @@ const InquiryTable: React.FC = () => {
                 withCredentials: true,
             });
 
-            console.log('API 응답:', response.data);
             setInquiries(response.data.inquiries);
             setFilteredInquiries(response.data.inquiries);
             setTotalPages(response.data.totalPages);
@@ -65,7 +64,6 @@ const InquiryTable: React.FC = () => {
                 withCredentials: true,
             });
 
-            console.log('API 응답:', response.data);
 
             // 검색 결과와 페이지네이션 설정
             setIsSearching(true); // 검색 모드 활성화

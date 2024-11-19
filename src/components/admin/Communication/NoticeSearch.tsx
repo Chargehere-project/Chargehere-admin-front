@@ -19,7 +19,6 @@ const NoticeSearch: React.FC<NoticeSearchProps> = ({ onSearch, onReset }) => {
             endDate: endDate || null, // 종료일
         };
 
-        console.log('searchParams:', searchParams); // 부모 컴포넌트로 전달되는 검색 조건 확인
         onSearch(searchParams); // 부모 컴포넌트로 검색 조건 전달
     };
 
